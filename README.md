@@ -29,7 +29,7 @@
 
 The platform integrates directly with **Moodle LMS**, enabling seamless course synchronization and providing an AI tutor powered by **Retrieval-Augmented Generation (RAG)** that answers questions using the student's actual course documents — with source citations.
 
-> **Built for the Route Academy AI Education Graduation Project — Summer 2026**
+> 
 
 ---
 

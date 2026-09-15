@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, Body
+from fastapi import APIRouter, HTTPException, Query, Body, Response
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field
 from app.services.championship_service import ChampionshipService
@@ -9,6 +9,13 @@ class PodcastRequest(BaseModel):
     topic: str = Field(..., example="Backpropagation and Gradient Descent")
     language: str = Field("ar", example="ar")
     dialect: bool = Field(True, example=True)
+
+class TTSRequest(BaseModel):
+    text: str = Field(..., min_length=1, example="أهلاً بكم في بودكاست شغوف...")
+    speaker: str = Field("host1", example="host1")
+    language: str = Field("ar", example="ar")
+    dialect: bool = Field(True, example=True)
+    speed: float = Field(1.0, example=1.0)
 
 class FeynmanRequest(BaseModel):
     topic: str = Field(..., example="Backpropagation")
@@ -28,6 +35,26 @@ def generate_podcast(req: PodcastRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/podcast/tts")
+async def synthesize_podcast_audio(req: TTSRequest):
+    """
+    Synthesize studio-quality broadcast neural audio using Microsoft Azure Neural TTS.
+    Flawless code-switching between Arabic and English terms.
+    """
+    try:
+        audio_bytes = await ChampionshipService.synthesize_speech(
+            text=req.text,
+            speaker=req.speaker,
+            language=req.language,
+            dialect=req.dialect,
+            speed=req.speed
+        )
+        if not audio_bytes:
+            raise HTTPException(status_code=500, detail="Audio synthesis produced empty stream")
+        return Response(content=audio_bytes, media_type="audio/mpeg")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"TTS synthesis error: {str(e)}")
 
 @router.get("/rag/benchmark")
 def get_rag_benchmark():

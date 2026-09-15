@@ -47,10 +47,167 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
   const [copied, setCopied] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [dialogue, setDialogue] = useState<HostTurn[]>([]);
+  const [isBuffering, setIsBuffering] = useState<boolean>(false);
 
-  // Speech synthesis reference
+  // Studio Neural Audio references
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioBlobCacheRef = useRef<Map<string, string>>(new Map());
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Pre-fetch next line audio for zero-latency seamless playback
+  const prefetchLineAudio = async (index: number) => {
+    if (index >= dialogue.length) return;
+    const item = dialogue[index];
+    const cacheKey = `${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
+    if (audioBlobCacheRef.current.has(cacheKey)) return;
+
+    try {
+      const res = await fetch('http://127.0.0.1:8000/api/v1/championship/podcast/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: item.text,
+          speaker: item.speaker,
+          language: isAr ? 'ar' : 'en',
+          dialect: dialectMode,
+          speed: playbackSpeed
+        })
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        audioBlobCacheRef.current.set(cacheKey, blobUrl);
+      }
+    } catch (e) {
+      // Background prefetch error ignored
+    }
+  };
+
+  // Play a line using ultra-realistic Microsoft Neural TTS with fallback
+  const playNeuralLine = async (index: number) => {
+    if (index >= dialogue.length || isMuted) {
+      if (index >= dialogue.length) {
+        setIsPlaying(false);
+        setCurrentLineIndex(0);
+      }
+      return;
+    }
+
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
+
+    const item = dialogue[index];
+    const cacheKey = `${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
+    let audioUrl = audioBlobCacheRef.current.get(cacheKey);
+
+    if (!audioUrl) {
+      setIsBuffering(true);
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/v1/championship/podcast/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: item.text,
+            speaker: item.speaker,
+            language: isAr ? 'ar' : 'en',
+            dialect: dialectMode,
+            speed: playbackSpeed
+          })
+        });
+        if (res.ok) {
+          const blob = await res.blob();
+          audioUrl = URL.createObjectURL(blob);
+          audioBlobCacheRef.current.set(cacheKey, audioUrl);
+        }
+      } catch (err) {
+        console.warn('Backend Neural TTS unreachable, falling back to browser synthesis:', err);
+      } finally {
+        setIsBuffering(false);
+      }
+    }
+
+    // If neural audio is ready, play studio audio!
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      currentAudioRef.current = audio;
+      audio.playbackRate = playbackSpeed;
+
+      audio.onended = () => {
+        if (index + 1 < dialogue.length) {
+          setCurrentLineIndex(index + 1);
+          playNeuralLine(index + 1);
+        } else {
+          setIsPlaying(false);
+          setCurrentLineIndex(0);
+        }
+      };
+
+      audio.onerror = () => {
+        setIsPlaying(false);
+      };
+
+      try {
+        await audio.play();
+        // Trigger prefetch for next line
+        prefetchLineAudio(index + 1);
+      } catch (e) {
+        console.warn('Autoplay error:', e);
+        setIsPlaying(false);
+      }
+    } else {
+      // Fallback: Browser speech synthesis
+      if (synthRef.current) {
+        synthRef.current.cancel();
+        const utterance = new SpeechSynthesisUtterance(item.text);
+        utterance.lang = isAr ? 'ar-SA' : 'en-US';
+        utterance.rate = playbackSpeed;
+        utterance.pitch = item.speaker === 'host1' ? 0.95 : 1.2;
+
+        utterance.onend = () => {
+          if (index + 1 < dialogue.length) {
+            setCurrentLineIndex(index + 1);
+            playNeuralLine(index + 1);
+          } else {
+            setIsPlaying(false);
+            setCurrentLineIndex(0);
+          }
+        };
+
+        utterance.onerror = () => setIsPlaying(false);
+        synthRef.current.speak(utterance);
+      }
+    }
+  };
+
+  const togglePlay = () => {
+    if (isPlaying) {
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+      }
+      if (synthRef.current) {
+        synthRef.current.cancel();
+      }
+      setIsPlaying(false);
+    } else {
+      setIsPlaying(true);
+      playNeuralLine(currentLineIndex);
+    }
+  };
+
+  const handleReset = () => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
+    if (synthRef.current) {
+      synthRef.current.cancel();
+    }
+    setIsPlaying(false);
+    setCurrentLineIndex(0);
+  };
 
   // Pre-configured rich dialogues
   const dialoguesArEgyptian: HostTurn[] = [
@@ -195,62 +352,6 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
     }
   }, [dialectMode, isAr, activeTopicId]);
 
-  // Handle line-by-line speech playback
-  const speakLine = (index: number) => {
-    if (!synthRef.current || isMuted || index >= dialogue.length) {
-      if (index >= dialogue.length) {
-        setIsPlaying(false);
-        setCurrentLineIndex(0);
-      }
-      return;
-    }
-
-    synthRef.current.cancel();
-    const item = dialogue[index];
-    const utterance = new SpeechSynthesisUtterance(item.text);
-
-    utterance.lang = isAr ? 'ar-SA' : 'en-US';
-    utterance.rate = playbackSpeed;
-    // Differentiate speaker pitch: Dr. Yusuf slightly deeper, Mariam slightly brighter
-    utterance.pitch = item.speaker === 'host1' ? 0.9 : 1.25;
-
-    utterance.onend = () => {
-      if (index + 1 < dialogue.length) {
-        setCurrentLineIndex(index + 1);
-        speakLine(index + 1);
-      } else {
-        setIsPlaying(false);
-        setCurrentLineIndex(0);
-      }
-    };
-
-    utterance.onerror = () => {
-      setIsPlaying(false);
-    };
-
-    synthRef.current.speak(utterance);
-  };
-
-  const togglePlay = () => {
-    if (isPlaying) {
-      if (synthRef.current) {
-        synthRef.current.cancel();
-      }
-      setIsPlaying(false);
-    } else {
-      setIsPlaying(true);
-      speakLine(currentLineIndex);
-    }
-  };
-
-  const handleReset = () => {
-    if (synthRef.current) {
-      synthRef.current.cancel();
-    }
-    setIsPlaying(false);
-    setCurrentLineIndex(0);
-  };
-
   const handleCopyTranscript = () => {
     const textToCopy = dialogue.map(d => `[${d.timestamp}] ${d.speakerName} (${d.role}):\n${d.text}`).join('\n\n');
     navigator.clipboard.writeText(textToCopy);
@@ -286,10 +387,22 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
                 <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
                   NotebookLM Style
                 </span>
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/30 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  <span>{isAr ? 'صوت استوديو عصبي (Azure Neural)' : 'Studio Neural Voices'}</span>
+                </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {isAr ? 'حوار تفاعلي ذكي بين خبيرين لتبسيط أعقد مفاهيم المادة في دقيقتين' : 'Two AI Co-hosts deconstructing complex lecture topics into conversational clarity'}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {isAr ? 'حوار تفاعلي ذكي بين خبيرين لتبسيط أعقد مفاهيم المادة في دقيقتين' : 'Two AI Co-hosts deconstructing complex lecture topics into conversational clarity'}
+                </p>
+                {isBuffering && (
+                  <span className="text-[11px] font-bold text-amber-500 animate-pulse flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    <span>{isAr ? 'جاري تجهيز الصوت العصبي...' : 'Buffering neural audio...'}</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -450,7 +563,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
                 onClick={() => {
                   setCurrentLineIndex(index);
                   if (isPlaying) {
-                    speakLine(index);
+                    playNeuralLine(index);
                   }
                 }}
                 className={`p-4 rounded-2xl border transition-all cursor-pointer ${

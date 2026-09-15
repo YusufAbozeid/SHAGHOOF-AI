@@ -1,8 +1,47 @@
 import re
 import math
+import hashlib
 from typing import Dict, Any, List
 
 class ChampionshipService:
+    _audio_cache: Dict[str, bytes] = {}
+
+    @staticmethod
+    async def synthesize_speech(text: str, speaker: str = "host1", language: str = "ar", dialect: bool = True, speed: float = 1.0) -> bytes:
+        """
+        Synthesizes broadcast studio quality neural audio using Microsoft Azure Neural voices
+        via edge-tts. Supports natural Arabic/Egyptian code-switching with English technical terms.
+        """
+        import edge_tts
+
+        cache_key = hashlib.md5(f"{text}_{speaker}_{language}_{dialect}_{speed}".encode("utf-8")).hexdigest()
+        if cache_key in ChampionshipService._audio_cache:
+            return ChampionshipService._audio_cache[cache_key]
+
+        # Select natural Neural voice
+        if language == "ar":
+            if dialect:
+                voice = "ar-EG-ShakirNeural" if speaker == "host1" else "ar-EG-SalmaNeural"
+            else:
+                voice = "ar-SA-HamedNeural" if speaker == "host1" else "ar-SA-ZariyahNeural"
+        else:
+            voice = "en-US-BrianNeural" if speaker == "host1" else "en-US-AvaNeural"
+
+        # Rate adjustment (e.g. "+0%", "+25%", "+50%")
+        rate_percent = int((speed - 1.0) * 100)
+        rate_str = f"{rate_percent:+d}%"
+
+        communicate = edge_tts.Communicate(text, voice, rate=rate_str)
+        audio_data = b""
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_data += chunk["data"]
+
+        if audio_data:
+            ChampionshipService._audio_cache[cache_key] = audio_data
+
+        return audio_data
+
     @staticmethod
     def generate_podcast_dialogue(topic: str, language: str = "ar", dialect: bool = True) -> Dict[str, Any]:
         """

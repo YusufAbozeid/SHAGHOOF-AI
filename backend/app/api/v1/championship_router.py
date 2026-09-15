@@ -16,6 +16,7 @@ class TTSRequest(BaseModel):
     language: str = Field("ar", example="ar")
     dialect: bool = Field(True, example=True)
     speed: float = Field(1.0, example=1.0)
+    engine: str = Field("google", example="google")
 
 class FeynmanRequest(BaseModel):
     topic: str = Field(..., example="Backpropagation")
@@ -39,8 +40,7 @@ def generate_podcast(req: PodcastRequest):
 @router.post("/podcast/tts")
 async def synthesize_podcast_audio(req: TTSRequest):
     """
-    Synthesize studio-quality broadcast neural audio using Microsoft Azure Neural TTS.
-    Flawless code-switching between Arabic and English terms.
+    Synthesize high-fidelity audio using Google AI Voice Model with bilingual code-switching.
     """
     try:
         audio_bytes = await ChampionshipService.synthesize_speech(
@@ -48,7 +48,8 @@ async def synthesize_podcast_audio(req: TTSRequest):
             speaker=req.speaker,
             language=req.language,
             dialect=req.dialect,
-            speed=req.speed
+            speed=req.speed,
+            engine=req.engine
         )
         if not audio_bytes:
             raise HTTPException(status_code=500, detail="Audio synthesis produced empty stream")

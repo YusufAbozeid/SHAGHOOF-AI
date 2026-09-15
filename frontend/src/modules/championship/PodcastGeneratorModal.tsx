@@ -71,7 +71,8 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
           speaker: item.speaker,
           language: isAr ? 'ar' : 'en',
           dialect: dialectMode,
-          speed: playbackSpeed
+          speed: playbackSpeed,
+          engine: 'google'
         })
       });
       if (res.ok) {
@@ -84,7 +85,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
     }
   };
 
-  // Play a line using ultra-realistic Microsoft Neural TTS with fallback
+  // Play a line using high-fidelity Google AI Bilingual TTS with fallback
   const playNeuralLine = async (index: number) => {
     if (index >= dialogue.length || isMuted) {
       if (index >= dialogue.length) {
@@ -114,7 +115,8 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
             speaker: item.speaker,
             language: isAr ? 'ar' : 'en',
             dialect: dialectMode,
-            speed: playbackSpeed
+            speed: playbackSpeed,
+            engine: 'google'
           })
         });
         if (res.ok) {
@@ -224,7 +226,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
       speakerName: 'مريم',
       avatar: '👩‍🔬',
       role: 'مهندسة ذكاء اصطناعي وباحثة',
-      text: `أهلاً دكتور يوسف! بصراحة جداً ومتحمسة. أغلب الطلبة لما بيشوفوا معادلات ${topicTitle} في ملفات الـ PDF بيتخضوا من كمية الرموز والاشتقاقات الجزئية!`,
+      text: `أهلاً دكتور يوسف! بصراحة جداً ومتحمسة. أغلب الطلبة لما بيشوفوا معادلات ${topicTitle} في ملفات PDF بيتخضوا من كمية الرموز والاشتقاقات الجزئية!`,
       timestamp: '00:15'
     },
     {
@@ -248,7 +250,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
       speakerName: 'د. يوسف',
       avatar: '👨‍🏫',
       role: 'كبير باحثي الذكاء الاصطناعي',
-      text: `عبقرية! هو ده بالظبط التمرير الخلفي (Backpropagation)! بنحسب الخطأ عند المخرجات، ونرجع نوزع المسؤولية على كل طبقة بالـ Chain Rule عشان نظبط الأوزان.`,
+      text: `عبقرية! هو ده بالظبط Backpropagation أو التمرير الخلفي! بنحسب الخطأ عند المخرجات، ونرجع نوزع المسؤولية على كل طبقة بقاعدة Chain Rule عشان نظبط الأوزان.`,
       timestamp: '01:05'
     },
     {
@@ -389,17 +391,17 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
                 </span>
                 <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/30 flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
-                  <span>{isAr ? 'صوت استوديو عصبي (Azure Neural)' : 'Studio Neural Voices'}</span>
+                  <span>{isAr ? 'محرك جوجل الصوتي الذكي (Google AI Bilingual)' : 'Google AI Bilingual Voice'}</span>
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {isAr ? 'حوار تفاعلي ذكي بين خبيرين لتبسيط أعقد مفاهيم المادة في دقيقتين' : 'Two AI Co-hosts deconstructing complex lecture topics into conversational clarity'}
+                  {isAr ? 'حوار تفاعلي ذكي بين خبيرين بنطق مصري وانجليزي احترافي للمصطلحات' : 'Two AI Co-hosts deconstructing complex lecture topics into conversational clarity'}
                 </p>
                 {isBuffering && (
                   <span className="text-[11px] font-bold text-amber-500 animate-pulse flex items-center gap-1">
                     <Sparkles className="w-3 h-3" />
-                    <span>{isAr ? 'جاري تجهيز الصوت العصبي...' : 'Buffering neural audio...'}</span>
+                    <span>{isAr ? 'جاري تجهيز صوت جوجل الذكي...' : 'Buffering Google AI audio...'}</span>
                   </span>
                 )}
               </div>

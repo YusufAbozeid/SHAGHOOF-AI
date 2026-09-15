@@ -104,61 +104,242 @@ The platform integrates directly with **Moodle LMS**, enabling seamless course s
 
 ---
 
-## 🏗 Architecture
+## 🏗 Architecture & System Diagrams
+
+### 1. High-Level System Architecture
 
 ```mermaid
 graph TB
-    subgraph Client["🖥️ Frontend — React 19 + TypeScript"]
-        UI["UI Components<br/>(Framer Motion)"]
-        Store["Zustand Store"]
-        Modules["Feature Modules<br/>Lesson | Chat | Curriculum"]
+    subgraph Client["🖥️ Client Tier — React 19 + TypeScript"]
+        UI["🎨 UI Components Layer<br/>(Framer Motion & TailwindCSS)"]
+        Store["⚡ Zustand Global Store<br/>(Courses, Materials, VARK State)"]
+        VARK_UI["🎭 VARK Multimodal Player<br/>(Visual, Auditory, Read/Write, Kinesthetic)"]
+        A11y["♿ Accessibility Suite<br/>(Dyslexia Font, Contrast, Screen Reader)"]
     end
 
-    subgraph Server["⚡ Backend — FastAPI"]
-        API["REST API v1"]
-        Tutor["Tutor Service"]
-        Moodle["Moodle Service"]
-        RAG["RAG Service"]
-        Security["Security Layer<br/>Rate Limiting | CORS | SSRF Protection"]
+    subgraph Gateway["🛡️ Gateway & Security Tier"]
+        Proxy["Nginx Reverse Proxy & Load Balancer"]
+        RateLimit["SlowAPI Rate Limiter<br/>(60 req/min guard)"]
+        SecurityHeaders["Security Middleware<br/>(CSP, HSTS, CORS, X-Frame)"]
     end
 
-    subgraph AI["🧠 AI & ML Pipeline"]
-        Embeddings["Sentence Transformers<br/>(all-MiniLM-L6-v2)"]
-        FAISS["FAISS Vector Store"]
-        LLM["Groq Cloud<br/>(LLaMA 3.1 8B)"]
+    subgraph Backend["⚡ Application Services Tier — FastAPI Async"]
+        Router["RESTful API Router (/api/v1)"]
+        MoodleService["🎓 Moodle Service<br/>(Auth, Course Discovery, PDF Downloader)"]
+        RAGService["🧬 RAG Engine & Chunker<br/>(Recursive Character Splitter)"]
+        TutorService["🤖 AI Tutor & Assessment Service<br/>(Feynman Levels & Multimodal Prompting)"]
+        TopicService["📚 Dynamic Topic & Syllabus Service"]
     end
 
-    subgraph External["🌐 External Services"]
-        MoodleLMS["Moodle LMS<br/>Web Services API"]
-        GroqAPI["Groq Cloud API"]
+    subgraph AI_Core["🧠 AI & Vector Computing Tier"]
+        Embedder["📐 Sentence Transformers<br/>(all-MiniLM-L6-v2, 384 dims)"]
+        VectorDB["🗄️ FAISS Vector Store<br/>(Cosine Similarity Index)"]
+        LLM["🚀 Groq Cloud API<br/>(LLaMA 3.1 8B Instant)"]
     end
 
-    subgraph Storage["💾 Data Layer"]
-        SQLite["SQLite<br/>User Data & Course Metadata"]
-        PDFs["PDF Storage<br/>Downloaded Course Materials"]
-        Vectors["FAISS Indices<br/>Per-User Vector Stores"]
+    subgraph External["🌐 External Platforms"]
+        MoodleAPI["🎓 Moodle LMS Instance<br/>(Web Services REST API)"]
+        GroqAPI["⚡ Groq Inference Cloud"]
+    end
+
+    subgraph Persistence["💾 Persistence Layer"]
+        DB["🗃️ SQLite Database<br/>(User Preferences, Metadata, Sync Logs)"]
+        Disk["📂 File Storage<br/>(Downloaded PDFs, Extracted Chunks)"]
     end
 
     UI --> Store
-    Store --> API
-    API --> Security
-    Security --> Tutor
-    Security --> Moodle
-    Security --> RAG
-    Moodle --> MoodleLMS
-    RAG --> Embeddings
-    RAG --> FAISS
-    RAG --> LLM
+    Store --> VARK_UI
+    Store --> A11y
+    Store --> Proxy
+    Proxy --> RateLimit
+    RateLimit --> SecurityHeaders
+    SecurityHeaders --> Router
+    Router --> MoodleService
+    Router --> RAGService
+    Router --> TutorService
+    Router --> TopicService
+    MoodleService --> MoodleAPI
+    MoodleService --> Disk
+    MoodleService --> DB
+    RAGService --> Embedder
+    RAGService --> VectorDB
+    TutorService --> RAGService
+    TutorService --> LLM
     LLM --> GroqAPI
-    Moodle --> SQLite
-    Moodle --> PDFs
-    RAG --> Vectors
 
-    style Client fill:#1a1a2e,stroke:#e94560,color:#fff
-    style Server fill:#16213e,stroke:#0f3460,color:#fff
-    style AI fill:#0f3460,stroke:#533483,color:#fff
-    style External fill:#533483,stroke:#e94560,color:#fff
-    style Storage fill:#1a1a2e,stroke:#533483,color:#fff
+    style Client fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
+    style Gateway fill:#181825,stroke:#fab387,color:#cdd6f4
+    style Backend fill:#11111b,stroke:#a6e3a1,color:#cdd6f4
+    style AI_Core fill:#181825,stroke:#cba6f7,color:#cdd6f4
+    style External fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4
+    style Persistence fill:#11111b,stroke:#94e2d5,color:#cdd6f4
+```
+
+---
+
+### 2. Sequence Diagram: Moodle Course Sync & PDF RAG Ingestion
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 👨‍🎓 Student / Learner
+    participant UI as 🖥️ Frontend (React 19)
+    participant API as ⚡ FastAPI Backend
+    participant Moodle as 🎓 Moodle LMS Web Service
+    participant Ingestion as 📑 PDF Ingestion Pipeline
+    participant Embedder as 📐 Sentence Transformers
+    participant FAISS as 🗄️ FAISS Vector Store
+    participant DB as 🗃️ SQLite Database
+
+    User->>UI: Enter Moodle URL & Web Service Token
+    UI->>API: POST /api/moodle/connect {url, token}
+    API->>Moodle: core_webservice_get_site_info
+    Moodle-->>API: 200 OK (User ID, Full Name, Site Details)
+    API->>Moodle: core_enrol_get_users_courses {userid}
+    Moodle-->>API: 200 OK (Enrolled Courses Array)
+    API->>DB: Cache User Session & Course Metadata
+    API-->>UI: Connected! Return Enrolled Courses
+    UI-->>User: Display Enrolled Course Cards in Moodle Hub
+
+    User->>UI: Select Course & Click "Activate Course"
+    UI->>API: POST /api/moodle/sync-course {course_id}
+    Note over API: Start Background Synchronization Task
+    API-->>UI: 202 Accepted (Sync Job Initiated)
+    
+    API->>Moodle: core_course_get_contents {courseid}
+    Moodle-->>API: Course Sections, Modules, & Resource Files
+    Note over API: Filter & discover all accessible PDF resources
+
+    loop For Every Discovered PDF Resource
+        API->>Moodle: Stream download PDF with auth token
+        Moodle-->>API: Binary PDF File Stream
+        API->>Ingestion: Save to disk & extract clean text
+        Ingestion->>Ingestion: Chunk text (size=500, overlap=50)
+        Ingestion->>Embedder: Batch encode text chunks
+        Embedder-->>Ingestion: 384-dimensional dense vectors
+        Ingestion->>FAISS: Add vectors with metadata (title, page, course_id)
+    end
+
+    API->>DB: Update Course Status: "ACTIVE" & Save Material List
+    FAISS->>FAISS: Persist index to disk per user
+    
+    UI->>API: Poll GET /api/moodle/sync-status/{course_id}
+    API-->>UI: Sync Completed (100%, X PDFs processed, Y vectors indexed)
+    UI-->>User: Course Activated! Ready for VARK Learning & AI Tutor
+```
+
+---
+
+### 3. Sequence Diagram: Context-Grounded AI Tutoring (RAG Pipeline)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 👨‍🎓 Student
+    participant ChatUI as 💬 Chat Interface (React)
+    participant API as ⚡ Tutor Service (FastAPI)
+    participant Embedder as 📐 Sentence Transformers
+    participant FAISS as 🗄️ FAISS Vector Store
+    participant LLM as 🤖 Groq Cloud (LLaMA 3.1 8B)
+
+    User->>ChatUI: Ask question: "Explain Backpropagation from Lecture 3"
+    ChatUI->>API: POST /api/v1/chat/tutor {message, course_id, modality}
+    
+    Note over API: Sanitize input & check rate limit (60/min)
+    API->>Embedder: Encode question into dense vector
+    Embedder-->>API: Query vector [1 x 384]
+
+    API->>FAISS: Cosine Similarity Search (IndexFlatIP, Top-k=4)
+    FAISS-->>API: Return Top-4 relevant document chunks + metadata (page, PDF name)
+
+    Note over API: Synthesize Augmented Context:<br/>System Prompt + Grounding Rules + Retrieved Chunks + Chat History
+    
+    API->>LLM: Chat Completion Request (Temperature=0.2, MaxTokens=1024)
+    LLM-->>API: Generated Explanation + Exact Citations [Lecture_3.pdf, Page 12]
+    
+    API-->>ChatUI: 200 OK {response, citations: [...], relevant_modality: "visual"}
+    ChatUI-->>User: Render formatted markdown response with interactive source badges
+```
+
+---
+
+### 4. Sequence Diagram: VARK Multimodal Lesson Delivery & Dynamic Switching
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 👨‍🎓 Student
+    participant Player as 🎭 VARK Lesson Player
+    participant Store as ⚡ Zustand State Store
+    participant API as ⚡ Topic & Content API
+    participant Renderer as 🎨 Modality Renderer Engine
+
+    User->>Player: Open Topic: "Convolutional Neural Networks"
+    Player->>Store: getActiveModality()
+    Store-->>Player: Current Modality: "Visual" (default)
+    
+    Player->>API: GET /api/topics/{topic_id}/content?modality=visual
+    API-->>Player: Visual Schema (SVG Diagrams, Concept Maps, Architecture Nodes)
+    Player->>Renderer: Render VisualModalityRenderer (Framer Motion transitions)
+    Renderer-->>User: Display Interactive Diagram with inspectable layers
+
+    User->>Player: Switch tab to "Kinesthetic" 🖐️
+    Player->>Store: setModality("kinesthetic")
+    Store-->>Player: State updated
+    Player->>API: GET /api/topics/{topic_id}/content?modality=kinesthetic
+    API-->>Player: Interactive Exercise Schema (Drag & Drop filter kernels, step simulator)
+    Player->>Renderer: Mount KinestheticModalityRenderer with instant animation
+    Renderer-->>User: Hands-on interactive sandbox to adjust convolutional filters live
+```
+
+---
+
+### 5. End-to-End Data Pipeline Flow
+
+```mermaid
+flowchart LR
+    subgraph S1["1. Ingestion"]
+        MoodleDoc["📄 Moodle Course PDF"]
+    end
+
+    subgraph S2["2. Processing"]
+        Extract["📝 Text Extraction<br/>(Clean whitespace)"]
+        Chunk["✂️ Semantic Chunking<br/>(500 tokens / 50 overlap)"]
+    end
+
+    subgraph S3["3. Vectorization"]
+        Model["📐 all-MiniLM-L6-v2<br/>Dense Embeddings"]
+        Vector["🔢 384-d Vectors"]
+    end
+
+    subgraph S4["4. Indexing"]
+        Index["🗄️ FAISS Index<br/>Per-user isolated index"]
+    end
+
+    subgraph S5["5. Retrieval"]
+        Query["❓ Student Question"] --> QVec["📐 Query Vector"]
+        QVec --> Search["🔍 Cosine Top-k Search"]
+        Index --> Search
+    end
+
+    subgraph S6["6. Delivery"]
+        Search --> Context["📋 Grounded Context"]
+        Context --> LLaMA["🤖 Groq LLaMA 3.1"]
+        LLaMA --> Output["🎓 Adaptive Multimodal Lesson<br/>(VARK Modalities)"]
+    end
+
+    MoodleDoc --> Extract
+    Extract --> Chunk
+    Chunk --> Model
+    Model --> Vector
+    Vector --> Index
+
+    style S1 fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
+    style S2 fill:#181825,stroke:#fab387,color:#cdd6f4
+    style S3 fill:#11111b,stroke:#a6e3a1,color:#cdd6f4
+    style S4 fill:#181825,stroke:#cba6f7,color:#cdd6f4
+    style S5 fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4
+    style S6 fill:#11111b,stroke:#94e2d5,color:#cdd6f4
 ```
 
 ### Tech Stack

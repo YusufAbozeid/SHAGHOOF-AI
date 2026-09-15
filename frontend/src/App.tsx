@@ -21,6 +21,13 @@ import { DwellClickSimulator } from './modules/accessibility/DwellClickSimulator
 import { LineFocusRuler } from './modules/accessibility/LineFocusRuler';
 import { AmbientSoundGenerator } from './modules/accessibility/AmbientSoundGenerator';
 
+// Championship Suite Components
+import { PodcastGeneratorModal } from './modules/championship/PodcastGeneratorModal';
+import { RAGBenchmarkModal } from './modules/championship/RAGBenchmarkModal';
+import { KnowledgeGraphModal } from './modules/championship/KnowledgeGraphModal';
+import { ReverseFeynmanModal } from './modules/championship/ReverseFeynmanModal';
+import { SDGImpactModal } from './modules/championship/SDGImpactModal';
+
 import { GraduationCap, CheckCircle2, Users, BookOpen, X } from 'lucide-react';
 
 const BackgroundDecoration = () => (
@@ -43,6 +50,13 @@ export function App() {
   const [isTeacherOpen, setIsTeacherOpen] = useState(false);
   const [isCurriculumHubOpen, setIsCurriculumHubOpen] = useState(false);
   const [isContractsBarOpen, setIsContractsBarOpen] = useState(false);
+
+  // Championship Suite Modals State
+  const [isPodcastOpen, setIsPodcastOpen] = useState(false);
+  const [isRAGBenchmarkOpen, setIsRAGBenchmarkOpen] = useState(false);
+  const [isKnowledgeGraphOpen, setIsKnowledgeGraphOpen] = useState(false);
+  const [isFeynmanOpen, setIsFeynmanOpen] = useState(false);
+  const [isSDGOpen, setIsSDGOpen] = useState(false);
 
   // Compute CSS filter for Color Blindness & High Contrast accommodations
   let containerFilter = '';
@@ -74,6 +88,11 @@ export function App() {
         <Navbar
           onOpenAccessibility={() => setIsAccessibilityOpen(true)}
           onOpenCurriculumHub={() => setIsCurriculumHubOpen(true)}
+          onOpenPodcast={() => setIsPodcastOpen(true)}
+          onOpenRAGBenchmark={() => setIsRAGBenchmarkOpen(true)}
+          onOpenKnowledgeGraph={() => setIsKnowledgeGraphOpen(true)}
+          onOpenFeynmanChallenge={() => setIsFeynmanOpen(true)}
+          onOpenSDGImpact={() => setIsSDGOpen(true)}
         />
 
         {/* Main Lesson Player Layout */}
@@ -205,6 +224,32 @@ export function App() {
         <TeacherDashboardPreview
           isOpen={isTeacherOpen}
           onClose={() => setIsTeacherOpen(false)}
+        />
+
+        {/* 🏆 Championship Suite Modals */}
+        <PodcastGeneratorModal
+          isOpen={isPodcastOpen}
+          onClose={() => setIsPodcastOpen(false)}
+        />
+
+        <RAGBenchmarkModal
+          isOpen={isRAGBenchmarkOpen}
+          onClose={() => setIsRAGBenchmarkOpen(false)}
+        />
+
+        <KnowledgeGraphModal
+          isOpen={isKnowledgeGraphOpen}
+          onClose={() => setIsKnowledgeGraphOpen(false)}
+        />
+
+        <ReverseFeynmanModal
+          isOpen={isFeynmanOpen}
+          onClose={() => setIsFeynmanOpen(false)}
+        />
+
+        <SDGImpactModal
+          isOpen={isSDGOpen}
+          onClose={() => setIsSDGOpen(false)}
         />
 
       </div>

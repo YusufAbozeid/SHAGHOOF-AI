@@ -5,7 +5,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
 from app.core.security import limiter, SecurityHeadersMiddleware
-from app.api.v1 import tutor_router, assessment_router, moodle_router
+from app.api.v1 import tutor_router, assessment_router, moodle_router, championship_router
 
 # Initialize Production FastAPI Application
 app = FastAPI(
@@ -36,6 +36,7 @@ app.add_middleware(
 app.include_router(tutor_router.router, prefix=settings.API_V1_STR)
 app.include_router(assessment_router.router, prefix=settings.API_V1_STR)
 app.include_router(moodle_router.router, prefix=settings.API_V1_STR)
+app.include_router(championship_router.router, prefix=settings.API_V1_STR)
 
 @app.get("/health", tags=["Health Check"])
 @app.get(f"{settings.API_V1_STR}/health", tags=["Health Check"])

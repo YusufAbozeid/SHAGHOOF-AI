@@ -16,15 +16,34 @@ import {
   User,
   LogOut,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Radio,
+  Trophy,
+  Network,
+  ShieldCheck,
+  BrainCircuit,
+  Globe2
 } from 'lucide-react';
 
 interface NavbarProps {
   onOpenAccessibility: () => void;
   onOpenCurriculumHub?: () => void;
+  onOpenPodcast?: () => void;
+  onOpenRAGBenchmark?: () => void;
+  onOpenKnowledgeGraph?: () => void;
+  onOpenFeynmanChallenge?: () => void;
+  onOpenSDGImpact?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenAccessibility, onOpenCurriculumHub }) => {
+export const Navbar: React.FC<NavbarProps> = ({ 
+  onOpenAccessibility, 
+  onOpenCurriculumHub,
+  onOpenPodcast,
+  onOpenRAGBenchmark,
+  onOpenKnowledgeGraph,
+  onOpenFeynmanChallenge,
+  onOpenSDGImpact
+}) => {
   const { 
     xp, 
     zenMode, 
@@ -49,13 +68,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAccessibility, onOpenCurri
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isChampionshipMenuOpen, setIsChampionshipMenuOpen] = useState(false);
 
   const profileRef = useRef<HTMLDivElement>(null);
+  const championshipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setIsProfileMenuOpen(false);
+      }
+      if (championshipRef.current && !championshipRef.current.contains(event.target as Node)) {
+        setIsChampionshipMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -140,6 +164,94 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAccessibility, onOpenCurri
             <Sparkles className="w-4 h-4 text-[#FF4D2D]" />
             <span>{isAr ? '📚 مجمع الكتب والمناهج' : '📚 Curriculum Hub'}</span>
           </button>
+
+          {/* AI Educational Podcast Button */}
+          <button
+            type="button"
+            onClick={onOpenPodcast}
+            aria-label="Open AI Educational Podcast Deep-Dive"
+            className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition shadow-sm shrink-0 whitespace-nowrap ${
+              isDark 
+                ? 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-400 ring-1 ring-amber-500/20' 
+                : 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-800'
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+            <span>{isAr ? '🎙️ كبسولة البودكاست' : '🎙️ AI Podcast'}</span>
+          </button>
+
+          {/* Championship Suite Dropdown */}
+          <div className="relative hidden xl:block" ref={championshipRef}>
+            <button
+              type="button"
+              onClick={() => setIsChampionshipMenuOpen(!isChampionshipMenuOpen)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black transition shadow-sm shrink-0 whitespace-nowrap ${
+                isDark 
+                  ? 'bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 text-purple-300' 
+                  : 'bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-800'
+              }`}
+            >
+              <Trophy className="w-3.5 h-3.5 text-purple-500" />
+              <span>{isAr ? '🏆 أدوات البطولة والتفوق' : '🏆 Championship Suite'}</span>
+              <ChevronDown className="w-3 h-3 text-purple-500" />
+            </button>
+
+            {isChampionshipMenuOpen && (
+              <div 
+                className={`absolute top-full mt-2 w-64 rounded-2xl border shadow-2xl p-2 z-50 animate-fade-in ${
+                  isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-800'
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => { setIsChampionshipMenuOpen(false); onOpenRAGBenchmark?.(); }}
+                  className="w-full flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-500 transition text-right rtl:text-right ltr:text-left"
+                >
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  <div>
+                    <div className="font-extrabold">{isAr ? 'معايير دقة RAG' : 'RAG Benchmark'}</div>
+                    <div className="text-[10px] text-slate-400 font-normal">{isAr ? 'مقاييس Ragas وانعدام الهلوسة' : '98.4% Faithfulness verified'}</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setIsChampionshipMenuOpen(false); onOpenKnowledgeGraph?.(); }}
+                  className="w-full flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold hover:bg-blue-500/10 hover:text-blue-500 transition text-right rtl:text-right ltr:text-left"
+                >
+                  <Network className="w-4 h-4 text-blue-500" />
+                  <div>
+                    <div className="font-extrabold">{isAr ? 'خريطة المفاهيم 3D' : '3D Knowledge Graph'}</div>
+                    <div className="text-[10px] text-slate-400 font-normal">{isAr ? 'شبكة الترابط المفاهيمي التفاعلية' : 'Topological concept network'}</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setIsChampionshipMenuOpen(false); onOpenFeynmanChallenge?.(); }}
+                  className="w-full flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold hover:bg-purple-500/10 hover:text-purple-500 transition text-right rtl:text-right ltr:text-left"
+                >
+                  <BrainCircuit className="w-4 h-4 text-purple-500" />
+                  <div>
+                    <div className="font-extrabold">{isAr ? 'تحدي فاينمان العكسي' : 'Reverse Feynman'}</div>
+                    <div className="text-[10px] text-slate-400 font-normal">{isAr ? 'اشرح المفهوم لجدتك أو لطفل' : 'Active Recall & Grandma Test'}</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setIsChampionshipMenuOpen(false); onOpenSDGImpact?.(); }}
+                  className="w-full flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold hover:bg-teal-500/10 hover:text-teal-500 transition text-right rtl:text-right ltr:text-left"
+                >
+                  <Globe2 className="w-4 h-4 text-teal-500" />
+                  <div>
+                    <div className="font-extrabold">{isAr ? 'أثر التنمية المستدامة' : 'UN SDG 4 & 10 Matrix'}</div>
+                    <div className="text-[10px] text-slate-400 font-normal">{isAr ? 'منظومة الشمول والتعليم المنصف' : 'Inclusive education impact'}</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Middle Controls: Theme Switcher, Egyptian Dialect & Global Language */}

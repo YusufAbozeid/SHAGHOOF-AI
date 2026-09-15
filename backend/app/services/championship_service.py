@@ -7,25 +7,69 @@ from typing import Dict, Any, List
 class ChampionshipService:
     _audio_cache: Dict[str, bytes] = {}
 
+    PHONETIC_AI_DICT: Dict[str, str] = {
+        r'\bBackpropagation\b': 'باك بروباجيشن',
+        r'\bBack-propagation\b': 'باك بروباجيشن',
+        r'\bBack propagation\b': 'باك بروباجيشن',
+        r'\bChain Rule\b': 'تشين رول',
+        r'\bChain-Rule\b': 'تشين رول',
+        r'\bGradient Descent\b': 'جرادينت ديسينت',
+        r'\bNeural Networks?\b': 'نيورال نتورك',
+        r'\bDeep Learning\b': 'ديب ليرنينج',
+        r'\bMachine Learning\b': 'ماشين ليرنينج',
+        r'\bLoss Functions?\b': 'لوس فانكشن',
+        r'\bActivation Functions?\b': 'أكتيفيشن فانكشن',
+        r'\bForward Pass\b': 'فوروارد باس',
+        r'\bBackward Pass\b': 'باك وارد باس',
+        r'\bWeights?\b': 'ويتس',
+        r'\bBiases?\b': 'بايس',
+        r'\bEpochs?\b': 'إيبوك',
+        r'\bBatch(?:es)?\b': 'باتش',
+        r'\bLearning Rate\b': 'ليرنينج ريت',
+        r'\bOverfitting\b': 'أوفر فيتنج',
+        r'\bUnderfitting\b': 'أندر فيتنج',
+        r'\bOptimization\b': 'أوبتيمايزيشن',
+        r'\bTensorFlow\b': 'تنسرفلو',
+        r'\bPyTorch\b': 'باي تورش',
+        r'\bPython\b': 'بايثون',
+        r'\bDatasets?\b': 'داتا سيت',
+        r'\bData\b': 'داتا',
+        r'\bFeatures?\b': 'فيتشرز',
+        r'\bVectors?\b': 'فيكتورز',
+        r'\bEmbeddings?\b': 'إمبيدنجز',
+        r'\bFine-?tuning\b': 'فاين تيونينج',
+        r'\bTransformers?\b': 'ترانسفورمرز',
+        r'\bAttention\b': 'أتنشن',
+        r'\bSelf-?Attention\b': 'سيلف أتنشن',
+        r'\bPrompts?\b': 'برومت',
+        r'\bAgents?\b': 'إيجنتس',
+        r'\bPDF\b': 'بي دي إف',
+        r'\bRAG\b': 'راج',
+        r'\bAI\b': 'الذكاء الاصطناعي',
+        r'\bCNN\b': 'سي إن إن',
+        r'\bRNN\b': 'آر إن إن',
+        r'\bLLMs?\b': 'إل إل إم',
+    }
+
     @staticmethod
-    def clean_text_for_speech(text: str) -> str:
+    def clean_text_for_speech(text: str, is_arabic: bool = True) -> str:
         """
         Preprocesses text to remove robotic artifacts, hanging prefixes, and pronounce acronyms naturally.
+        Phonetizes English technical terms for Arabic speech so a single unified voice pronounces
+        both Arabic and technical terms with a natural accent and ZERO speaker switching.
         """
         # Remove hanging Arabic prefixes attached to English words
         text = re.sub(r'الـ\s*([a-zA-Z]+)', r'\1', text)
-        text = re.sub(r'بالـ\s*([a-zA-Z]+)', r'بتقنية \1', text)
+        text = re.sub(r'بالـ\s*([a-zA-Z]+)', r'بقاعدة \1', text)
         text = re.sub(r'للـ\s*([a-zA-Z]+)', r'لـ \1', text)
         text = re.sub(r'كالـ\s*([a-zA-Z]+)', r'مثل \1', text)
 
-        # Pronounce acronyms naturally
-        text = re.sub(r'\bPDF\b', 'بي دي إف', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bRAG\b', 'نظام راج للبحث الذكي', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bAI\b', 'الذكاء الاصطناعي', text)
-        text = re.sub(r'\bCNN\b', 'شبكات سي إن إن', text)
-        text = re.sub(r'\bLLM\b', 'نماذج اللغة الكبيرة', text)
+        # In Arabic mode, replace technical English terms phonetically for seamless pronunciation
+        if is_arabic:
+            for pattern, replacement in ChampionshipService.PHONETIC_AI_DICT.items():
+                text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
 
-        # Remove redundant parentheses around English terms
+        # Remove redundant parentheses and symbols
         text = text.replace('(', ' ').replace(')', ' ').replace('[', ' ').replace(']', ' ').replace('"', ' ').replace("'", ' ')
         text = re.sub(r'\s+', ' ', text).strip()
         return text
@@ -37,62 +81,59 @@ class ChampionshipService:
         language: str = "ar", 
         dialect: bool = True, 
         speed: float = 1.0,
-        engine: str = "google"
+        engine: str = "azure"
     ) -> bytes:
         """
-        Synthesizes audio using Google's Voice Engine with smart bilingual code-switching.
-        English words are pronounced in native Google US English, and Arabic in Google Egyptian.
+        Synthesizes ultra-high fidelity audio using a SINGLE unified voice stream.
+        No token splitting between languages — ensuring 100% stable voice tone, 
+        zero voice-switching artifacts, and natural Egyptian accent for tech terms.
         """
-        cleaned_text = ChampionshipService.clean_text_for_speech(text)
-        cache_key = hashlib.md5(f"google_{cleaned_text}_{speaker}_{language}_{dialect}_{speed}".encode("utf-8")).hexdigest()
+        is_ar = (language == "ar")
+        cleaned_text = ChampionshipService.clean_text_for_speech(text, is_arabic=is_ar)
+        cache_key = hashlib.md5(f"{engine}_{cleaned_text}_{speaker}_{language}_{dialect}_{speed}".encode("utf-8")).hexdigest()
         if cache_key in ChampionshipService._audio_cache:
             return ChampionshipService._audio_cache[cache_key]
 
         audio_bytes = b""
 
-        # 1. Primary Engine: Google AI Voice Model (gTTS with bilingual code-switching)
-        try:
-            from gtts import gTTS
-            
-            if language == "en":
-                # Pure English
-                tts = gTTS(text=cleaned_text, lang='en', tld='com')
+        # 1. Primary Engine: Microsoft Azure Neural (Highest quality broadcast studio voices)
+        if engine == "azure":
+            try:
+                import edge_tts
+                if is_ar:
+                    if dialect:
+                        voice = "ar-EG-ShakirNeural" if speaker == "host1" else "ar-EG-SalmaNeural"
+                    else:
+                        voice = "ar-SA-HamedNeural" if speaker == "host1" else "ar-SA-ZariyahNeural"
+                else:
+                    voice = "en-US-BrianNeural" if speaker == "host1" else "en-US-AvaNeural"
+
+                rate_percent = int((speed - 1.0) * 100)
+                rate_str = f"{rate_percent:+d}%"
+                communicate = edge_tts.Communicate(cleaned_text, voice, rate=rate_str)
+                audio_data = b""
+                async for chunk in communicate.stream():
+                    if chunk["type"] == "audio":
+                        audio_data += chunk["data"]
+                audio_bytes = audio_data
+            except Exception as e:
+                print(f"Azure Neural TTS failed: {e}, falling back to Google TTS...")
+                engine = "google"
+
+        # 2. Google AI Unified Voice (No token splitting - 100% unified speaker tone)
+        if not audio_bytes or engine == "google":
+            try:
+                from gtts import gTTS
+                if is_ar:
+                    tld = 'com.eg' if (speaker == 'host1' or dialect) else 'com'
+                    tts = gTTS(text=cleaned_text, lang='ar', tld=tld)
+                else:
+                    tts = gTTS(text=cleaned_text, lang='en', tld='com')
                 fp = io.BytesIO()
                 tts.write_to_fp(fp)
                 audio_bytes = fp.getvalue()
-            else:
-                # Arabic with potential English technical terms
-                tld = 'com.eg' if dialect else 'com'
-                tokens = re.split(r'([a-zA-Z0-9_\-]+(?:\s+[a-zA-Z0-9_\-]+)*)', cleaned_text)
-                combined_fp = io.BytesIO()
-
-                for token in tokens:
-                    token = token.strip()
-                    if not token or not re.search(r'\w', token):
-                        continue
-                    is_english = bool(re.match(r'^[a-zA-Z0-9_\-\s]+$', token))
-                    if is_english:
-                        tts = gTTS(text=token, lang='en', tld='com')
-                    else:
-                        # Speaker 1: Google Egyptian, Speaker 2: Slightly varied TLD
-                        tld_choice = 'com.eg' if speaker == 'host1' else ('com' if dialect else 'com.eg')
-                        tts = gTTS(text=token, lang='ar', tld=tld_choice)
-                    tts.write_to_fp(combined_fp)
-
-                audio_bytes = combined_fp.getvalue()
-
-        except Exception as google_err:
-            print(f"Google TTS notice: {google_err}, falling back to Azure Neural")
-            # Fallback to Azure Neural
-            try:
-                import edge_tts
-                voice = "ar-EG-ShakirNeural" if speaker == "host1" else "ar-EG-SalmaNeural"
-                communicate = edge_tts.Communicate(cleaned_text, voice)
-                async for chunk in communicate.stream():
-                    if chunk["type"] == "audio":
-                        audio_bytes += chunk["data"]
-            except Exception as e:
-                print(f"Fallback TTS failed: {e}")
+            except Exception as gtts_err:
+                print(f"Google TTS failed: {gtts_err}")
 
         if audio_bytes:
             ChampionshipService._audio_cache[cache_key] = audio_bytes

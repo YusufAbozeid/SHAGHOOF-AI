@@ -48,6 +48,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [dialogue, setDialogue] = useState<HostTurn[]>([]);
   const [isBuffering, setIsBuffering] = useState<boolean>(false);
+  const [voiceEngine, setVoiceEngine] = useState<'azure' | 'google'>('azure');
 
   // Studio Neural Audio references
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -59,7 +60,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
   const prefetchLineAudio = async (index: number) => {
     if (index >= dialogue.length) return;
     const item = dialogue[index];
-    const cacheKey = `${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
+    const cacheKey = `${voiceEngine}_${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
     if (audioBlobCacheRef.current.has(cacheKey)) return;
 
     try {
@@ -72,7 +73,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
           language: isAr ? 'ar' : 'en',
           dialect: dialectMode,
           speed: playbackSpeed,
-          engine: 'google'
+          engine: voiceEngine
         })
       });
       if (res.ok) {
@@ -85,7 +86,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
     }
   };
 
-  // Play a line using high-fidelity Google AI Bilingual TTS with fallback
+  // Play a line using high-fidelity unified TTS with fallback
   const playNeuralLine = async (index: number) => {
     if (index >= dialogue.length || isMuted) {
       if (index >= dialogue.length) {
@@ -101,7 +102,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
     }
 
     const item = dialogue[index];
-    const cacheKey = `${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
+    const cacheKey = `${voiceEngine}_${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
     let audioUrl = audioBlobCacheRef.current.get(cacheKey);
 
     if (!audioUrl) {
@@ -116,7 +117,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
             language: isAr ? 'ar' : 'en',
             dialect: dialectMode,
             speed: playbackSpeed,
-            engine: 'google'
+            engine: voiceEngine
           })
         });
         if (res.ok) {
@@ -391,17 +392,22 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
                 </span>
                 <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/30 flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
-                  <span>{isAr ? 'محرك جوجل الصوتي الذكي (Google AI Bilingual)' : 'Google AI Bilingual Voice'}</span>
+                  <span>
+                    {voiceEngine === 'azure' 
+                      ? (isAr ? 'صوت استوديو موحد (Azure Neural)' : 'Azure Studio Neural')
+                      : (isAr ? 'محرك جوجل الصوتي الموحد (Google AI Voice)' : 'Google AI Unified Voice')
+                    }
+                  </span>
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {isAr ? 'حوار تفاعلي ذكي بين خبيرين بنطق مصري وانجليزي احترافي للمصطلحات' : 'Two AI Co-hosts deconstructing complex lecture topics into conversational clarity'}
+                  {isAr ? 'حوار تفاعلي ذكي بنبرة صوت موحدة 100% بدون أي تبديل بين الأصوات للمصطلحات التقنية' : 'Two AI Co-hosts deconstructing complex lecture topics into conversational clarity'}
                 </p>
                 {isBuffering && (
                   <span className="text-[11px] font-bold text-amber-500 animate-pulse flex items-center gap-1">
                     <Sparkles className="w-3 h-3" />
-                    <span>{isAr ? 'جاري تجهيز صوت جوجل الذكي...' : 'Buffering Google AI audio...'}</span>
+                    <span>{isAr ? 'جاري تجهيز الصوت عالي النقاء...' : 'Buffering audio...'}</span>
                   </span>
                 )}
               </div>
@@ -437,33 +443,69 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
               </span>
             </div>
 
-            {/* Dialect Switcher (Egyptian vs Standard) */}
-            {isAr && (
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Dialect Switcher (Egyptian vs Standard) */}
+              {isAr && (
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-200/60 dark:bg-slate-800/80 border border-slate-300/60 dark:border-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setDialectMode(true)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                      dialectMode 
+                        ? 'bg-[#FF4D2D] text-white shadow-sm' 
+                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    🇪🇬 بالعامية المصرية
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDialectMode(false)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                      !dialectMode 
+                        ? 'bg-[#FF4D2D] text-white shadow-sm' 
+                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    📖 بالفصحى الأكاديمية
+                  </button>
+                </div>
+              )}
+
+              {/* Voice Engine Switcher (Azure Studio Neural vs Google AI) */}
               <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-200/60 dark:bg-slate-800/80 border border-slate-300/60 dark:border-slate-700">
                 <button
                   type="button"
-                  onClick={() => setDialectMode(true)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                    dialectMode 
-                      ? 'bg-[#FF4D2D] text-white shadow-sm' 
+                  onClick={() => {
+                    setVoiceEngine('azure');
+                    handleReset();
+                  }}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                    voiceEngine === 'azure' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
+                  title={isAr ? 'أصوات استوديو بنبرة موحدة لا تتغير' : 'Studio Neural Voices'}
                 >
-                  🇪🇬 بالعامية المصرية
+                  <span>🎙️ {isAr ? 'استوديو (Azure)' : 'Studio'}</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDialectMode(false)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                    !dialectMode 
-                      ? 'bg-[#FF4D2D] text-white shadow-sm' 
+                  onClick={() => {
+                    setVoiceEngine('google');
+                    handleReset();
+                  }}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                    voiceEngine === 'google' 
+                      ? 'bg-emerald-600 text-white shadow-sm' 
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
+                  title={isAr ? 'محرك جوجل الصوتي الموحد' : 'Google AI Voice'}
                 >
-                  📖 بالفصحى الأكاديمية
+                  <span>🌐 {isAr ? 'جوجل (Google)' : 'Google AI'}</span>
                 </button>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Dynamic Audio Waveform Animation */}

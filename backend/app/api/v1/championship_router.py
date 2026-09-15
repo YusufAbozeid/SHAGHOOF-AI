@@ -16,7 +16,7 @@ class TTSRequest(BaseModel):
     language: str = Field("ar", example="ar")
     dialect: bool = Field(True, example=True)
     speed: float = Field(1.0, example=1.0)
-    engine: str = Field("google", example="google")
+    engine: str = Field("azure", example="azure")
 
 class FeynmanRequest(BaseModel):
     topic: str = Field(..., example="Backpropagation")
@@ -40,7 +40,8 @@ def generate_podcast(req: PodcastRequest):
 @router.post("/podcast/tts")
 async def synthesize_podcast_audio(req: TTSRequest):
     """
-    Synthesize high-fidelity audio using Google AI Voice Model with bilingual code-switching.
+    Synthesize high-fidelity audio using unified neural voices (Azure Neural or Google AI).
+    Zero voice-switching mid-sentence with natural phonetic pronunciation of technical terms.
     """
     try:
         audio_bytes = await ChampionshipService.synthesize_speech(

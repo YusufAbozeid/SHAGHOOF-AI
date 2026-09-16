@@ -106,8 +106,8 @@ class ChampionshipService:
             if effective_key:
                 try:
                     import httpx
-                    # Adam for Dr. Yusuf (host1), Rachel for Mariam (host2)
-                    voice_id = "pNInz6obpgDQGcFmaJgB" if speaker == "host1" else "21m00Tcm4TlvDq8ikWAM"
+                    # Adam for Dr. Yusuf (host1), Bella for Mariam (host2)
+                    voice_id = "pNInz6obpgDQGcFmaJgB" if speaker == "host1" else "EXAVITQu4vr4xnSDxMaL"
                     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
                     headers = {
                         "xi-api-key": effective_key,

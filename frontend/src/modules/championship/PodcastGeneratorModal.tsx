@@ -48,7 +48,10 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [dialogue, setDialogue] = useState<HostTurn[]>([]);
   const [isBuffering, setIsBuffering] = useState<boolean>(false);
-  const [voiceEngine, setVoiceEngine] = useState<'azure' | 'google'>('azure');
+  const [voiceEngine, setVoiceEngine] = useState<'elevenlabs' | 'azure' | 'google'>('elevenlabs');
+  const [elevenApiKey, setElevenApiKey] = useState<string>(() => {
+    return typeof window !== 'undefined' ? (localStorage.getItem('shaghoof_eleven_key') || '') : '';
+  });
 
   // Studio Neural Audio references
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -73,7 +76,8 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
           language: isAr ? 'ar' : 'en',
           dialect: dialectMode,
           speed: playbackSpeed,
-          engine: voiceEngine
+          engine: voiceEngine,
+          api_key: elevenApiKey || undefined
         })
       });
       if (res.ok) {
@@ -117,7 +121,8 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
             language: isAr ? 'ar' : 'en',
             dialect: dialectMode,
             speed: playbackSpeed,
-            engine: voiceEngine
+            engine: voiceEngine,
+            api_key: elevenApiKey || undefined
           })
         });
         if (res.ok) {
@@ -390,10 +395,12 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
                 <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
                   NotebookLM Style
                 </span>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/30 flex items-center gap-1">
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-500 border border-purple-500/30 flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
                   <span>
-                    {voiceEngine === 'azure' 
+                    {voiceEngine === 'elevenlabs'
+                      ? (isAr ? '👑 إليفن لابس (ElevenLabs Multilingual v2)' : 'ElevenLabs Multilingual v2')
+                      : voiceEngine === 'azure' 
                       ? (isAr ? 'صوت استوديو موحد (Azure Neural)' : 'Azure Studio Neural')
                       : (isAr ? 'محرك جوجل الصوتي الموحد (Google AI Voice)' : 'Google AI Unified Voice')
                     }
@@ -472,22 +479,37 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
                 </div>
               )}
 
-              {/* Voice Engine Switcher (Azure Studio Neural vs Google AI) */}
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-200/60 dark:bg-slate-800/80 border border-slate-300/60 dark:border-slate-700">
+              {/* Voice Engine Switcher (ElevenLabs vs Azure vs Google) */}
+              <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-200/60 dark:bg-slate-800/80 border border-slate-300/60 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVoiceEngine('elevenlabs');
+                    handleReset();
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-black transition flex items-center gap-1 ${
+                    voiceEngine === 'elevenlabs' 
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                  title={isAr ? 'أعلى دقة بشرية عالمياً - ElevenLabs Multilingual v2' : 'ElevenLabs Multilingual v2'}
+                >
+                  <span>👑 {isAr ? 'ElevenLabs v2' : 'ElevenLabs'}</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => {
                     setVoiceEngine('azure');
                     handleReset();
                   }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
                     voiceEngine === 'azure' 
                       ? 'bg-blue-600 text-white shadow-sm' 
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
-                  title={isAr ? 'أصوات استوديو بنبرة موحدة لا تتغير' : 'Studio Neural Voices'}
+                  title={isAr ? 'أصوات استوديو إذاعية مصرية فائقة النقاء' : 'Studio Neural Voices'}
                 >
-                  <span>🎙️ {isAr ? 'استوديو (Azure)' : 'Studio'}</span>
+                  <span>🎙️ {isAr ? 'استوديو' : 'Studio'}</span>
                 </button>
                 <button
                   type="button"
@@ -495,14 +517,37 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
                     setVoiceEngine('google');
                     handleReset();
                   }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
                     voiceEngine === 'google' 
                       ? 'bg-emerald-600 text-white shadow-sm' 
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                   title={isAr ? 'محرك جوجل الصوتي الموحد' : 'Google AI Voice'}
                 >
-                  <span>🌐 {isAr ? 'جوجل (Google)' : 'Google AI'}</span>
+                  <span>🌐 {isAr ? 'جوجل' : 'Google'}</span>
+                </button>
+
+                {/* Optional Key Config Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const input = window.prompt(
+                      isAr 
+                        ? 'أدخل مفتاح ElevenLabs API Key الخاص بك (اختياري - لتشغيل الموديل بمفتاحك):' 
+                        : 'Enter your ElevenLabs API Key (optional):',
+                      elevenApiKey
+                    );
+                    if (input !== null) {
+                      setElevenApiKey(input.trim());
+                      localStorage.setItem('shaghoof_eleven_key', input.trim());
+                      audioBlobCacheRef.current.clear();
+                      handleReset();
+                    }
+                  }}
+                  className="px-1.5 py-1 text-slate-400 hover:text-purple-500 transition text-xs font-bold"
+                  title={isAr ? 'إدخال مفتاح ElevenLabs API Key' : 'Configure ElevenLabs Key'}
+                >
+                  ⚙️
                 </button>
               </div>
             </div>

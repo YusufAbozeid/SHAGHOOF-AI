@@ -1,8 +1,9 @@
 import re
 import io
+import os
 import math
 import hashlib
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 class ChampionshipService:
     _audio_cache: Dict[str, bytes] = {}
@@ -81,12 +82,15 @@ class ChampionshipService:
         language: str = "ar", 
         dialect: bool = True, 
         speed: float = 1.0,
-        engine: str = "azure"
+        engine: str = "elevenlabs",
+        api_key: Optional[str] = None
     ) -> bytes:
         """
         Synthesizes ultra-high fidelity audio using a SINGLE unified voice stream.
-        No token splitting between languages — ensuring 100% stable voice tone, 
-        zero voice-switching artifacts, and natural Egyptian accent for tech terms.
+        Supports:
+        - ElevenLabs Multilingual v2 (Global Gold Standard with human emotion & code-switching)
+        - Microsoft Azure Neural (Egyptian Studio broadcast voices: Shakir & Salma)
+        - Google AI Unified Voice
         """
         is_ar = (language == "ar")
         cleaned_text = ChampionshipService.clean_text_for_speech(text, is_arabic=is_ar)
@@ -96,8 +100,41 @@ class ChampionshipService:
 
         audio_bytes = b""
 
-        # 1. Primary Engine: Microsoft Azure Neural (Highest quality broadcast studio voices)
-        if engine == "azure":
+        # 1. Flagship Engine: ElevenLabs Multilingual v2 (Global #1 AI Voice)
+        if engine == "elevenlabs":
+            effective_key = api_key or os.getenv("ELEVENLABS_API_KEY", "")
+            if effective_key:
+                try:
+                    import httpx
+                    # Adam for Dr. Yusuf (host1), Rachel for Mariam (host2)
+                    voice_id = "pNInz6obpgDQGcFmaJgB" if speaker == "host1" else "21m00Tcm4TlvDq8ikWAM"
+                    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+                    headers = {
+                        "xi-api-key": effective_key,
+                        "Content-Type": "application/json"
+                    }
+                    # ElevenLabs Multilingual v2 handles bilingual code-switching natively
+                    raw_clean = ChampionshipService.clean_text_for_speech(text, is_arabic=False)
+                    payload = {
+                        "text": raw_clean,
+                        "model_id": "eleven_multilingual_v2",
+                        "voice_settings": {
+                            "stability": 0.5,
+                            "similarity_boost": 0.8,
+                            "style": 0.3
+                        }
+                    }
+                    async with httpx.AsyncClient(timeout=25.0) as client:
+                        resp = await client.post(url, json=payload, headers=headers)
+                        if resp.status_code == 200 and resp.content:
+                            audio_bytes = resp.content
+                        else:
+                            print(f"ElevenLabs notice ({resp.status_code}): {resp.text[:120]}, falling back to Azure")
+                except Exception as el_err:
+                    print(f"ElevenLabs synthesis notice: {el_err}, falling back to Azure")
+
+        # 2. Studio Quality: Microsoft Azure Neural (Highest quality Egyptian studio voices)
+        if not audio_bytes and engine in ("elevenlabs", "azure"):
             try:
                 import edge_tts
                 if is_ar:
@@ -118,10 +155,9 @@ class ChampionshipService:
                 audio_bytes = audio_data
             except Exception as e:
                 print(f"Azure Neural TTS failed: {e}, falling back to Google TTS...")
-                engine = "google"
 
-        # 2. Google AI Unified Voice (No token splitting - 100% unified speaker tone)
-        if not audio_bytes or engine == "google":
+        # 3. Google AI Unified Voice (No token splitting - 100% unified speaker tone)
+        if not audio_bytes:
             try:
                 from gtts import gTTS
                 if is_ar:

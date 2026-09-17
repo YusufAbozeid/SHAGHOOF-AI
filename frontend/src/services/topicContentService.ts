@@ -788,3 +788,629 @@ export function getKinestheticData(topic: CourseTopic): KinestheticData {
     simType: 'neural_nets'
   };
 }
+
+// -------------------------------------------------------------
+// 5. PODCAST MODALITY DYNAMIC DIALOGUE ENGINE
+// -------------------------------------------------------------
+export interface PodcastHostTurn {
+  speaker: 'host1' | 'host2';
+  speakerName: string;
+  avatar: string;
+  role: string;
+  text: string;
+  timestamp: string;
+}
+
+export function getPodcastDialogue(topic: CourseTopic, language: string = 'ar', dialect: boolean = true): PodcastHostTurn[] {
+  const type = getTopicType(topic);
+  const isAr = language === 'ar';
+  const title = isAr ? topic.titleAr : topic.titleEn;
+
+  // 1. Session 1: Text Preprocessing & Attention
+  if (type === 'transformers' || topic.id === 'su26_session1') {
+    if (isAr && dialect) {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `أهلاً بيكم يا شباب في حلقة جديدة من كبسولة بودكاست شغوف! النهاردة بنفكك سوا موضوع السيشين الأولى الأهم: معالجة النصوص وحسابات الانتباه (Text Preprocessing & Attention). إزيك يا مريم، جاهزة نبسط معمارية الـ Attention سوا؟`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `أهلاً دكتور يوسف! بصراحة جداً ومتحمسة. ورقة Attention Is All You Need بتلخبط طلبة كتير في البداية لما يشوفوا مصفوفات الـ Query و Key و Value وتجهيز الـ Tokens!`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `بالظبط! الفكرة بسيطة جداً: تخيلي جملة زي 'البنك على شاطئ النهر' وجملة 'سحبت فلوس من البنك'. إزاي النموذج بيعرف معنى كلمة 'البنك' في السياقين؟`,
+          timestamp: '00:32'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `عن طريق الكلمات المجاورة ليها! كلمة 'شاطئ' بتوجه المعنى للطبيعة، بينما كلمة 'فلوس' بتوجه المعنى للمؤسسة المالية!`,
+          timestamp: '00:48'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `الله ينور عليكي! ده بالظبط آلية الـ Self-Attention! بنضرب الـ Query في ترانسبوز الـ Key ونطبق Softmax عشان نحدد وزن ترابط كل كلمة مع باقي الكلمات، ونعالج الجملة كاملة بالتوازي على الـ GPU بدلاً من بطء الـ RNN القديم!`,
+          timestamp: '01:05'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `روعة! وبكده الـ Embedding بياخد بُعد دلالي حي، وكل رأس في الـ Multi-Head بيتعلم نمط لغوي مختلف. استوعبت الفكرة تماماً وجاهزة لتطبيق أكواد الـ Preprocessing!`,
+          timestamp: '01:25'
+        }
+      ];
+    } else if (isAr && !dialect) {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'خبير النظم الذكية',
+          text: `مرحباً بكم في حلقة جديدة من البودكاست التعليمي لمنصة شغوف. موضوع جلستنا اليوم: معالجة النصوص وحسابات الانتباه (Text Preprocessing & Attention). أهلاً بكِ مريم.`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'باحثة نظم الحوسبة',
+          text: `أهلاً بك دكتور يوسف. تمثل آلية الانتباه الذاتي Self-Attention حجر الزاوية في نماذج معالجة اللغات الحديثة، ابتداءً من ترميز الرموز Tokenization وحتى بناء مصفوفات التضمين Embeddings.`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'خبير النظم الذكية',
+          text: `صحيح تماماً. المبدأ يقوم على حساب مصفوفات Q و K و V لتقييم الترابط الدلالي بين كافة مفردات الجملة بالتوازي عبر مقياس Scaled Dot-Product وتطبيق دالة Softmax.`,
+          timestamp: '00:32'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'باحثة نظم الحوسبة',
+          text: `وهذا يفسر التخلص التام من الاختناق التسلسلي الذي عانت منه شبكات RNN، مما مكن المحولات من معالجة السياقات الضخمة بسرعة فائقة ودقة متناهية.`,
+          timestamp: '00:50'
+        }
+      ];
+    } else {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: 'Dr. Yusuf',
+          avatar: '👨‍🏫',
+          role: 'Lead AI Scientist',
+          text: `Welcome to the SHAGHOOF AI Deep-Dive Podcast! Today we explore Session 1: Text Preprocessing and the Attention Mechanism. Ready Mariam?`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'Mariam',
+          avatar: '👩‍🔬',
+          role: 'AI Research Engineer',
+          text: `Thrilled to be here! The Attention Is All You Need architecture completely revolutionizes NLP by ditching recurrence for parallel self-attention.`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'Dr. Yusuf',
+          avatar: '👨‍🏫',
+          role: 'Lead AI Scientist',
+          text: `Exactly! Through Query, Key, and Value matrix projections, every token measures semantic resonance against all other sequence tokens via Scaled Dot-Product Attention.`,
+          timestamp: '00:35'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'Mariam',
+          avatar: '👩‍🔬',
+          role: 'AI Research Engineer',
+          text: `And multi-head projections allow the model to concurrently attend to grammatical structure, factual relations, and distant dependencies across GPU tensor cores!`,
+          timestamp: '00:55'
+        }
+      ];
+    }
+  }
+
+  // 2. Session 2: CNN & Concurrency
+  if (type === 'cnn' || topic.id === 'su26_session2') {
+    if (isAr && dialect) {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `أهلاً بيكم يا شباب في حلقة جديدة من بودكاست شغوف! النهاردة معادنا مع السيشين التانية: الشبكات التلافيفية CNN وتصنيف الصور والبرمجة المتزامنة Concurrency في بايثون. جاهزة يا مريم؟`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `أهلاً دكتور يوسف! بصراحة موضوع شيق جداً، دمج الرؤية الحاسوبية على مجموعة بيانات Intel Kaggle مع تحديات التزامن والـ GIL في بايثون مهم جداً للتطبيقات الواقعية.`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `بالظبط! فكرة الـ CNN بتعتمد على فلاتر كيرنل (Kernels) صغيرة بتنزلق على بكسلات الصورة لاستخراج ملامح زي الحواف والزوايا، وبنعمل Max Pooling لتقليل الحجم والحفاظ على أهم الخصائص.`,
+          timestamp: '00:32'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `وعلى جانب بايثون، لما نحمل آلاف الصور بنستخدم Threading أو AsyncIO لتسريع الـ I/O، بينما معالجة البكسلات الحسابية بتحتاج Multiprocessing لتخطي قفل الـ GIL!`,
+          timestamp: '00:48'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `الله يفتح عليكي! التفرقة دي بين الـ I/O-Bound والـ CPU-Bound هي اللي بتخلي نظام الذكاء الاصطناعي يشتغل في الإنتاج بكفاءة وسرعة استثنائية!`,
+          timestamp: '01:05'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `عظيم جداً! كده وضحت صورة الـ Feature Extraction وتكاملها مع بنية الـ Concurrency البرمجية. يلا بينا على التطبيق العملي!`,
+          timestamp: '01:25'
+        }
+      ];
+    } else if (isAr && !dialect) {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'خبير النظم الذكية',
+          text: `مرحباً بكم في حلقة جديدة من البودكاست التعليمي لمنصة شغوف. نناقش اليوم: الشبكات التلافيفية CNN وتصنيف الصور وأنظمة التزامن Concurrency. أهلاً بكِ مريم.`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'باحثة نظم الحوسبة',
+          text: `أهلاً دكتور يوسف. تكمن قوة شبكات CNN في قدرتها الفائقة على استخلاص الخصائص المكانية للصورة عبر طبقات الالتفاف Convolution والتجميع Pooling.`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'خبير النظم الذكية',
+          text: `بالتأكيد. ويقترن ذلك برفع كفاءة تحميل البيانات عبر معمارية التزامن؛ حيث نتجاوز قيود قفل بايثون GIL باستخدام المعالجة المتعددة Multiprocessing للأعباء الحسابية.`,
+          timestamp: '00:32'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'باحثة نظم الحوسبة',
+          text: `وهذا يحقق التوازن الأمثل بين دقة نموذج التصنيف وسرعة معالجة التدفقات الصورية الضخمة.`,
+          timestamp: '00:50'
+        }
+      ];
+    } else {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: 'Dr. Yusuf',
+          avatar: '👨‍🏫',
+          role: 'Lead AI Scientist',
+          text: `Welcome back! Today we break down Session 2: Convolutional Neural Networks (CNNs) and Python Concurrency Architecture. Ready Mariam?`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'Mariam',
+          avatar: '👩‍🔬',
+          role: 'AI Research Engineer',
+          text: `Excited for this! CNN feature extraction on the Intel image dataset combined with Python GIL bypass strategies makes for an essential production deep dive.`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'Dr. Yusuf',
+          avatar: '👨‍🏫',
+          role: 'Lead AI Scientist',
+          text: `Exactly. Convolutional kernels scan spatial hierarchies while pooling reduces dimensions. Pairing this with Multiprocessing ensures full CPU-bound throughput without GIL bottleneck.`,
+          timestamp: '00:35'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'Mariam',
+          avatar: '👩‍🔬',
+          role: 'AI Research Engineer',
+          text: `Clear, robust, and highly scalable. Let's inspect the pipeline!`,
+          timestamp: '00:55'
+        }
+      ];
+    }
+  }
+
+  // 3. Session 3: RNN, LSTM & Sentiment Analysis
+  if (type === 'rnn' || topic.id === 'su26_session3') {
+    if (isAr && dialect) {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `أهلاً بيكم يا شباب في حلقة جديدة من بودكاست شغوف! النهاردة موضوعنا عن السيشين التالتة: الشبكات التكرارية RNN و LSTM و GRU وتصنيف المشاعر على داتا ست Amazon Polarity. إزيك يا مريم؟`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `أهلاً دكتور يوسف! موضوع الـ Recurrence والذاكرة الزمنية في السلاسل النصية ده كان التحدي الأكبر لعلماء الذكاء الاصطناعي لعقود!`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `بالظبط! الـ Vanilla RNN كانت بتعاني من مشكلة قاتلة اسمها تلاشي التدرج Vanishing Gradient، فالشبكة كانت بتنسى أول الجملة لما النص يطول!`,
+          timestamp: '00:32'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `وهنا ظهرت عبقرية خلايا LSTM مع بوابات النسيان Forget Gate والإدخال Input Gate والإخراج Output Gate للتحكم بدقة في تدفق المعلومات عبر الزمن!`,
+          timestamp: '00:48'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `صح جداً! وبفضل بنية البوابات دي، الموديل بيقدر يحلل تقييمات العملاء الطويلة على Amazon ويحدد المشاعر إيجابية ولا سلبية بدقة عالية جداً!`,
+          timestamp: '01:05'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `رائع جداً! فهمت الفارق بين الـ Cell State والـ Hidden State ومستعدة لاختبار نموذج تصنيف المشاعر عملياً!`,
+          timestamp: '01:25'
+        }
+      ];
+    } else if (isAr && !dialect) {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'خبير النظم الذكية',
+          text: `مرحباً بكم في حلقة جديدة من البودكاست التعليمي لمنصة شغوف. جلستنا اليوم مخصصة للشبكات التكرارية (RNN, LSTM, GRU) وتطبيقات تصنيف المشاعر. أهلاً بكِ مريم.`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'باحثة نظم الحوسبة',
+          text: `أهلاً دكتور يوسف. يمثل التعامل مع البيانات المتسلسلة زمنياً تحدياً محورياً نظراً لمشكلة تلاشي التدرج الرياضي في الشبكات التكرارية البسيطة.`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'خبير النظم الذكية',
+          text: `صحيح تماماً. وتكمن المعالجة الحاسمة في معمارية LSTM عبر تسييل الذاكرة الطويلة Cell State وضبط بوابات النسيان والتحديث للحفاظ على السياق.`,
+          timestamp: '00:32'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'باحثة نظم الحوسبة',
+          text: `مما يجعلها مثالية لتصنيف النصوص المعقدة وتحليل المشاعر بدقة عالية في مجموعات البيانات الحقيقية.`,
+          timestamp: '00:50'
+        }
+      ];
+    } else {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: 'Dr. Yusuf',
+          avatar: '👨‍🏫',
+          role: 'Lead AI Scientist',
+          text: `Welcome! Today we dissect Session 3: Recurrent Neural Networks, LSTMs, GRUs, and Sentiment Analysis. Ready Mariam?`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'Mariam',
+          avatar: '👩‍🔬',
+          role: 'AI Research Engineer',
+          text: `Excited to be here! The transition from vanishing gradient issues in vanilla RNNs to gated memory cells in LSTMs is a pivotal milestone in sequential modeling.`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'Dr. Yusuf',
+          avatar: '👨‍🏫',
+          role: 'Lead AI Scientist',
+          text: `Indeed. By regulating the cell state through forget, input, and output gates, LSTMs preserve long-range text context for accurate sentiment polarity classification.`,
+          timestamp: '00:35'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'Mariam',
+          avatar: '👩‍🔬',
+          role: 'AI Research Engineer',
+          text: `Crucial foundation before scaling to transformers. Let's analyze the recurrent gates!`,
+          timestamp: '00:55'
+        }
+      ];
+    }
+  }
+
+  // 4. Session 5: Fine-tuning LoRA/QLoRA & Streamlit
+  if (topic.id === 'su26_session5') {
+    if (isAr && dialect) {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `أهلاً بيكم يا شباب في حلقة جديدة من بودكاست شغوف! النهاردة معادنا مع موضوع السيشين الخامسة: الضبط الدقيق بنظام LoRA و QLoRA ونشر التطبيقات بواجهة Streamlit! جاهزة يا مريم؟`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `أهلاً دكتور يوسف! بصراحة موضوع في غاية الأهمية. تدريب النماذج الضخمة Full Fine-Tuning بيحتاج سيرفرات بملايين، فإزاي LoRA حلت المعضلة دي؟`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `عبقرية LoRA إننا بنجمد أوزان الموديل الأساسية بالكامل، وبنضيف مصفوفتين صغيرين جداً برتبة منخفضة (Low Rank) للتدريب، فنوفر أكتر من 90% من الذاكرة!`,
+          timestamp: '00:32'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `ومع QLoRA بنعمل تكميم Quantization بدقة 4-bit، فالموديل يشتغل على كارت شاشة شخصي عادي، ونبنيله واجهة تفاعلية بـ Streamlit في دقايق!`,
+          timestamp: '00:48'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `بالظبط! ودي المهارة الأساسية اللي بتخليك قادر تبني منتجات ذكاء اصطناعي جاهزة للاستخدام الحقيقي بتكلفة اقتصادية مذهلة.`,
+          timestamp: '01:05'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `رائع جداً! مستعدة تماماً لتطبيق كود الـ PEFT ورفع واجهة التطبيق التفاعلية!`,
+          timestamp: '01:25'
+        }
+      ];
+    } else {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: isAr ? 'د. يوسف' : 'Dr. Yusuf',
+          avatar: '👨‍🏫',
+          role: isAr ? 'كبير باحثي الذكاء الاصطناعي' : 'Lead AI Scientist',
+          text: isAr
+            ? `مرحباً بكم في حلقة بودكاست شغوف حول تقنيات الضبط الدقيق الفعال LoRA و QLoRA ونشر النماذج بواجهات Streamlit.`
+            : `Welcome to the deep dive on Parameter-Efficient Fine-Tuning: LoRA, QLoRA, and Streamlit deployment!`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: isAr ? 'مريم' : 'Mariam',
+          avatar: '👩‍🔬',
+          role: isAr ? 'مهندسة وباحثة ذكاء اصطناعي' : 'AI Research Engineer',
+          text: isAr
+            ? `أهلاً دكتور يوسف. تكمن أهمية LoRA في تجميد أوزان النموذج وتدريب مصفوفات منخفضة الرتبة مما يوفر الذاكرة الحسابية بشكل جذري.`
+            : `Glad to be here! LoRA freezes foundational weights and trains low-rank adapter matrices, slashing GPU VRAM requirements by over 80%.`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: isAr ? 'د. يوسف' : 'Dr. Yusuf',
+          avatar: '👨‍🏫',
+          role: isAr ? 'كبير باحثي الذكاء الاصطناعي' : 'Lead AI Scientist',
+          text: isAr
+            ? `صحيح تماماً، ومع تكميم 4-bit في تقنية QLoRA نتمكن من تشغيل النماذج وتطوير واجهات تفاعلية سريعة عبر Streamlit بكفاءة إنتاجية عالية.`
+            : `Pairing that with 4-bit NormalFloat quantization in QLoRA empowers us to deploy interactive Streamlit AI apps on accessible hardware.`,
+          timestamp: '00:35'
+        }
+      ];
+    }
+  }
+
+  // 5. Session 8: RAG & Vector Databases
+  if (type === 'rag' || topic.id === 'su26_session8') {
+    if (isAr && dialect) {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `أهلاً بيكم يا شباب في حلقة جديدة من بودكاست شغوف! النهاردة بنفكك السيشين التامنة الأهم: التوليد المعزز بالاسترجاع RAG وقواعد البيانات المتجهة Vector DBs! جاهزة يا مريم؟`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `أهلاً دكتور يوسف! جداً ومتحمسة. الـ RAG هو النقلة النوعية اللي حلت مشكلة الهلوسة Hallucination في النماذج التوليدية وجعلت الذكاء الاصطناعي موثوق 100%!`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `بالظبط! الفكرة عاملة زي الطالب اللي داخل الامتحان بكتاب مفتوح: بنقطع ملفات الـ PDF لمقاطع Chunks مع نسبة تداخل Overlap، ونحولها لمتجهات دلالية نخزنها في Weaviate أو FAISS!`,
+          timestamp: '00:32'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `ولما الطالب يسأل سؤاله، بنعمل بحث تشابه جيب التمام Cosine Similarity، ونسترجع الفقرة المطابقة بالضبط برقم الصفحة واسم الملف ونمررها للـ LLM مع السؤال!`,
+          timestamp: '00:48'
+        },
+        {
+          speaker: 'host1',
+          speakerName: 'د. يوسف',
+          avatar: '👨‍🏫',
+          role: 'كبير باحثي الذكاء الاصطناعي',
+          text: `الله يفتح عليكي! بكده الإجابة تكون موثقة علمياً بدقة مية في المية، وده المعيار الأكاديمي الحقيقي المعتمد في منصة شغوف.`,
+          timestamp: '01:05'
+        },
+        {
+          speaker: 'host2',
+          speakerName: 'مريم',
+          avatar: '👩‍🔬',
+          role: 'مهندسة ذكاء اصطناعي وباحثة',
+          text: `ممتاز جداً! استوعبت هندسة الـ Chunking والبحث الدلالي تماماً ومستعدة لفحص مقاييس الـ RAG Triad عملياً!`,
+          timestamp: '01:25'
+        }
+      ];
+    } else {
+      return [
+        {
+          speaker: 'host1',
+          speakerName: isAr ? 'د. يوسف' : 'Dr. Yusuf',
+          avatar: '👨‍🏫',
+          role: isAr ? 'كبير باحثي الذكاء الاصطناعي' : 'Lead AI Scientist',
+          text: isAr
+            ? `مرحباً بكم في حلقة بودكاست شغوف حول التوليد المعزز بالاسترجاع RAG وقواعد البيانات المتجهة Vector Databases.`
+            : `Welcome to the SHAGHOOF AI Deep-Dive on Retrieval-Augmented Generation (RAG) and Vector Databases!`,
+          timestamp: '00:00'
+        },
+        {
+          speaker: 'host2',
+          speakerName: isAr ? 'مريم' : 'Mariam',
+          avatar: '👩‍🔬',
+          role: isAr ? 'مهندسة وباحثة ذكاء اصطناعي' : 'AI Research Engineer',
+          text: isAr
+            ? `أهلاً دكتور يوسف. يمثل الـ RAG الحل الجذري للقضاء على الهلوسة في نماذج LLM وربط الإجابات بمستندات Moodle الموثقة.`
+            : `Excited to discuss this! RAG grounds generative models in verified course PDFs to ensure zero-hallucination factual precision.`,
+          timestamp: '00:15'
+        },
+        {
+          speaker: 'host1',
+          speakerName: isAr ? 'د. يوسف' : 'Dr. Yusuf',
+          avatar: '👨‍🏫',
+          role: isAr ? 'كبير باحثي الذكاء الاصطناعي' : 'Lead AI Scientist',
+          text: isAr
+            ? `صحيح تماماً، عبر تقطيع المستندات وتضمينها متجهات واسترجاعها عبر Weaviate و FAISS بالتشابه الاتجاهي وتوثيق رقم الصفحة بدقة.`
+            : `Through recursive chunking, dense vector indexing, and cosine similarity retrieval, the LLM receives verified page citations for every claim.`,
+          timestamp: '00:35'
+        }
+      ];
+    }
+  }
+
+  // 6. Generic / Custom / Any other topic (Dynamic Synthesis)
+  return [
+    {
+      speaker: 'host1',
+      speakerName: isAr ? 'د. يوسف' : 'Dr. Yusuf',
+      avatar: '👨‍🏫',
+      role: isAr ? 'كبير باحثي الذكاء الاصطناعي' : 'Lead AI Scientist',
+      text: isAr
+        ? (dialect
+            ? `أهلاً بيكم يا شباب في حلقة جديدة من بودكاست شغوف! النهاردة معادنا مع موضوع مهم جداً: "${title}". إزيك يا مريم، جاهزة نفكك الموضوع ده ببساطة؟`
+            : `مرحباً بكم في حلقة جديدة من البودكاست التعليمي لمنصة شغوف. موضوع جلستنا اليوم يتمحور حول "${title}". أهلاً بكِ مريم.`)
+        : `Welcome back to the SHAGHOOF AI Deep-Dive Podcast! Today we explore: "${title}". Ready Mariam?`,
+      timestamp: '00:00'
+    },
+    {
+      speaker: 'host2',
+      speakerName: isAr ? 'مريم' : 'Mariam',
+      avatar: '👩‍🔬',
+      role: isAr ? 'مهندسة ذكاء اصطناعي وباحثة' : 'AI Research Engineer',
+      text: isAr
+        ? (dialect
+            ? `أهلاً دكتور يوسف! بصراحة متحمسة جداً. موضوع ${title} بيلخبط طلبة كتير في البداية لما يشوفوا تفاصيله المعقدة في المحاضرة!`
+            : `أهلاً بك دكتور يوسف. يمثل مفهوم ${title} ركيزة أساسية في المنهج الأكاديمي، وتوضيح فلسفته وتطبيقه العملي يسهل استيعابه بشكل كبير.`)
+        : `Thrilled to be here! "${title}" is a critical topic in our syllabus, and breaking down its intuition makes all the difference for students.`,
+      timestamp: '00:15'
+    },
+    {
+      speaker: 'host1',
+      speakerName: isAr ? 'د. يوسف' : 'Dr. Yusuf',
+      avatar: '👨‍🏫',
+      role: isAr ? 'كبير باحثي الذكاء الاصطناعي' : 'Lead AI Scientist',
+      text: isAr
+        ? (dialect
+            ? `بالظبط! السر دايماً إننا نفهم الحدس والتطبيق العملي قبل الحفظ: كل خطوة في ${title} ليها هدف واضح بيخدم حل المشكلة بكفاءة.`
+            : `صحيح تماماً. المبدأ يقوم على تفكيك التحدي إلى خطوات متسلسلة واستخدام الأدوات التقنية المناسبة لتحقيق أعلى كفاءة ودقة ممكنة.`)
+        : `Exactly! The core intuition behind "${title}" is breaking down complex problems into modular steps and applying rigorous best practices.`,
+      timestamp: '00:32'
+    },
+    {
+      speaker: 'host2',
+      speakerName: isAr ? 'مريم' : 'Mariam',
+      avatar: '👩‍🔬',
+      role: isAr ? 'مهندسة ذكاء اصطناعي وباحثة' : 'AI Research Engineer',
+      text: isAr
+        ? (dialect
+            ? `يا سلام! وبكده الطالب يقدر يربط المفاهيم النظرية بالتطبيق العملي في منصة شغوف، ويستفيد من أنماط VARK البصرية والحركية!`
+            : `وهذا يفسر التكامل الفريد في منصة شغوف لترسيخ الفهم النظري والممارسة العملية التفاعلية لكافة الطلاب.`)
+        : `And that ties directly into SHAGHOOF's adaptive multimodal player, allowing students to visualize, listen, and interact hands-on!`,
+      timestamp: '00:50'
+    }
+  ];
+}

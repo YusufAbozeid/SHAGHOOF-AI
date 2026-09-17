@@ -8,8 +8,33 @@ interface TwoPassAssessmentProps {
 }
 
 export const TwoPassAssessment: React.FC<TwoPassAssessmentProps> = ({ isOpen, onClose }) => {
-  const { addXP, language } = useStore();
+  const { addXP, language, activeTopicId, topics } = useStore();
   const isAr = language === 'ar';
+  const activeTopic = topics.find(t => t.id === activeTopicId) || topics[0];
+  const topicTitle = activeTopic ? (isAr ? activeTopic.titleAr : activeTopic.titleEn) : '';
+  const topicLower = (activeTopic?.id + ' ' + (activeTopic?.titleEn || '') + ' ' + (activeTopic?.titleAr || '')).toLowerCase();
+
+  let questionText = isAr
+    ? `السؤال: اشرح الفكرة الجوهرية والتطبيق العملي لموضوع "${topicTitle}"؟`
+    : `Question: Explain the fundamental intuition and practical engineering application of "${topicTitle}"?`;
+
+  if (topicLower.includes('attention') || topicLower.includes('انتباه') || topicLower.includes('session 1') || topicLower.includes('session1')) {
+    questionText = isAr
+      ? 'السؤال: اشرح كيف تحسب آلية الانتباه الذاتي (Self-Attention) ترابط الكلمات بالتوازي باستخدام مصفوفات Q و K و V بدلاً من المعالجة التسلسلية؟'
+      : 'Question: How does Self-Attention compute contextual relations in parallel using Q, K, and V matrices instead of sequential recurrence?';
+  } else if (topicLower.includes('cnn') || topicLower.includes('concurrency') || topicLower.includes('تزامن') || topicLower.includes('session 2')) {
+    questionText = isAr
+      ? 'السؤال: اشرح دور فلاتر الالتفاف (Convolution) وطبقات التجميع (Pooling) في تصنيف الصور، وكيف نتجاوز قفل الـ GIL بالـ Multiprocessing؟'
+      : 'Question: How do Convolutional filters and Pooling layers extract spatial features, and how does Multiprocessing bypass Python\'s GIL?';
+  } else if (topicLower.includes('rnn') || topicLower.includes('lstm') || topicLower.includes('sentiment') || topicLower.includes('session 3')) {
+    questionText = isAr
+      ? 'السؤال: كيف تحل خلايا الـ LSTM وبوابات النسيان مشكلة تلاشي التدرج (Vanishing Gradient) في تصنيف المشاعر وتحليل السلاسل النصية؟'
+      : 'Question: How do LSTM gated memory cells mitigate the Vanishing Gradient problem in sequential sentiment analysis?';
+  } else if (topicLower.includes('rag') || topicLower.includes('vector') || topicLower.includes('استرجاع') || topicLower.includes('session 8')) {
+    questionText = isAr
+      ? 'السؤال: كيف تضمن منظومة الـ RAG والبحث الدلالي بالمتجهات القضاء على الهلوسة في نماذج الذكاء الاصطناعي مع التوثيق بالصفحة؟'
+      : 'Question: How does Retrieval-Augmented Generation (RAG) eliminate hallucinations using dense vector retrieval and page citation?';
+  }
 
   const [answerInput, setAnswerInput] = useState('');
   const [assessmentResult, setAssessmentResult] = useState<{
@@ -80,9 +105,7 @@ export const TwoPassAssessment: React.FC<TwoPassAssessmentProps> = ({ isOpen, on
 
         <div className="space-y-3">
           <p className="text-xs text-slate-300 font-semibold leading-relaxed">
-            {isAr 
-              ? 'السؤال: اشرح كيف تمنع خوارزمية Backpropagation تكرار الخطأ في الشبكات العصبية؟' 
-              : 'Question: How does the Backpropagation algorithm reduce error loss in Neural Networks?'}
+            {questionText}
           </p>
           <textarea
             value={answerInput}

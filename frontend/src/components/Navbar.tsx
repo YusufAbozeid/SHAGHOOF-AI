@@ -65,6 +65,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isAr = language === 'ar';
   const isDark = themeMode === 'dark';
 
+  const sensoryLabel = isAr
+    ? sensoryLoadLevel === 'low'
+      ? 'حمل حسي: منخفض'
+      : sensoryLoadLevel === 'medium'
+      ? 'حمل حسي: متوسط'
+      : 'حمل حسي: مرتفع'
+    : `Sensory: ${sensoryLoadLevel === 'low' ? 'Low' : sensoryLoadLevel === 'medium' ? 'Medium' : 'High'}`;
+
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -117,7 +125,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           : 'bg-white/95 border-slate-200 text-slate-800 shadow-sm'
       }`}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
+      <div className="max-w-[1600px] w-full mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
         
         {/* Brand Logo & Course Selector Button */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -405,7 +413,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               setSensoryLoadLevel(next);
             }}
             aria-label={`Sensory load level: ${sensoryLoadLevel}`}
-            className={`hidden 2xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition shrink-0 whitespace-nowrap ${
+            className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition shrink-0 whitespace-nowrap ${
               sensoryLoadLevel === 'low'
                 ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
                 : sensoryLoadLevel === 'medium'
@@ -415,7 +423,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Leaf className="w-3.5 h-3.5 shrink-0" />
             <span>
-              {isAr ? `حمل حسي: ${sensoryLoadLevel.toUpperCase()}` : `Sensory: ${sensoryLoadLevel.toUpperCase()}`}
+              {sensoryLabel}
             </span>
           </button>
 

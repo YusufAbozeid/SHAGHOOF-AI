@@ -63,7 +63,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
   const prefetchLineAudio = async (index: number) => {
     if (index >= dialogue.length) return;
     const item = dialogue[index];
-    const cacheKey = `${voiceEngine}_${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
+    const cacheKey = `v3_${voiceEngine}_${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
     if (audioBlobCacheRef.current.has(cacheKey)) return;
 
     try {
@@ -106,7 +106,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
     }
 
     const item = dialogue[index];
-    const cacheKey = `${voiceEngine}_${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
+    const cacheKey = `v3_${voiceEngine}_${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
     let audioUrl = audioBlobCacheRef.current.get(cacheKey);
 
     if (!audioUrl) {
@@ -213,6 +213,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
     if (synthRef.current) {
       synthRef.current.cancel();
     }
+    audioBlobCacheRef.current.clear();
     setIsPlaying(false);
     setCurrentLineIndex(0);
   };
@@ -355,6 +356,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
     }
     setCurrentLineIndex(0);
     setIsPlaying(false);
+    audioBlobCacheRef.current.clear();
     if (synthRef.current) {
       synthRef.current.cancel();
     }

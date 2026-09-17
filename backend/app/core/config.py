@@ -1,6 +1,14 @@
 import os
+from pathlib import Path
 from typing import List
 from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+
+# Load .env file automatically
+_backend_dir = Path(__file__).resolve().parent.parent.parent
+load_dotenv(_backend_dir / ".env")
+load_dotenv()
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "SHAGHOOF AI Enterprise Platform"

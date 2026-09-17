@@ -128,10 +128,13 @@ class ChampionshipService:
                         resp = await client.post(url, json=payload, headers=headers)
                         if resp.status_code == 200 and resp.content:
                             audio_bytes = resp.content
+                            print(f"[TTS] ElevenLabs Multilingual v2 success: {len(audio_bytes)} bytes for {speaker} ({voice_id})")
                         else:
-                            print(f"ElevenLabs notice ({resp.status_code}): {resp.text[:120]}, falling back to Azure")
+                            print(f"[TTS] ElevenLabs notice ({resp.status_code}): {resp.text[:120]}, falling back to Azure")
                 except Exception as el_err:
-                    print(f"ElevenLabs synthesis notice: {el_err}, falling back to Azure")
+                    print(f"[TTS] ElevenLabs synthesis notice: {el_err}, falling back to Azure")
+            else:
+                print("[TTS] ElevenLabs key not provided, falling back to Azure")
 
         # 2. Studio Quality: Microsoft Azure Neural (Highest quality Egyptian studio voices)
         if not audio_bytes and engine in ("elevenlabs", "azure"):
@@ -153,8 +156,9 @@ class ChampionshipService:
                     if chunk["type"] == "audio":
                         audio_data += chunk["data"]
                 audio_bytes = audio_data
+                print(f"[TTS] Azure Neural success: {len(audio_bytes)} bytes for {speaker} ({voice})")
             except Exception as e:
-                print(f"Azure Neural TTS failed: {e}, falling back to Google TTS...")
+                print(f"[TTS] Azure Neural TTS failed: {e}, falling back to Google TTS...")
 
         # 3. Google AI Unified Voice (No token splitting - 100% unified speaker tone)
         if not audio_bytes:
@@ -168,8 +172,9 @@ class ChampionshipService:
                 fp = io.BytesIO()
                 tts.write_to_fp(fp)
                 audio_bytes = fp.getvalue()
+                print(f"[TTS] Google TTS fallback success: {len(audio_bytes)} bytes for {speaker}")
             except Exception as gtts_err:
-                print(f"Google TTS failed: {gtts_err}")
+                print(f"[TTS] Google TTS failed: {gtts_err}")
 
         if audio_bytes:
             ChampionshipService._audio_cache[cache_key] = audio_bytes

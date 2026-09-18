@@ -12,7 +12,7 @@ export interface WordwallGameTemplate {
 
 export const TOP_15_WORDWALL_TEMPLATES: WordwallGameTemplate[] = [
   { id: 'gameshow_quiz', nameAr: 'المسابقة التفاعلية', nameEn: 'Quiz Arena', icon: '🎯', badgeAr: 'أكثر شعبية', descriptionAr: 'اختبار خيارات متعددة مع عداد نقاط ودعم المساعدة' },
-  { id: 'match_up', nameAr: 'التوصيل والمطابقة', nameEn: 'Match-up', icon: '🎮', badgeAr: 'توصيل', descriptionAr: 'ربط المصطلحات العلمية بالتعاريف الصحيحة' },
+  { id: 'match_up', nameAr: 'التوصيل والمطابقة', nameEn: 'Match-up', icon: '🎮', badgeAr: 'توصيل', descriptionAr: 'ربط المصطلحات العلمية بالتعاريف الصحيحة عبر جولات متعددة' },
   { id: 'spin_wheel', nameAr: 'عجلة الحظ والتحدي', nameEn: 'Spin the Wheel', icon: '🎡', badgeAr: 'تحدي', descriptionAr: 'عجلة دوارة تختار أسئلة ومكافآت عشوائية' },
   { id: 'true_false', nameAr: 'صواب أم خطأ', nameEn: 'True or False', icon: '⚡', badgeAr: 'سريع', descriptionAr: 'تقييم صحة العبارات العلمية مع تصحيح الأخطاء' },
   { id: 'whack_a_mole', nameAr: 'اصطياد الإجابات', nameEn: 'Whack-a-Mole', icon: '🔨', badgeAr: 'سرعة', descriptionAr: 'اصطياد القوارض التي تحمل الإجابة الصحيحة وتفادي الخاطئة' },
@@ -27,33 +27,43 @@ export const TOP_15_WORDWALL_TEMPLATES: WordwallGameTemplate[] = [
   { id: 'custom_embed', nameAr: 'تضمين رابط Wordwall', nameEn: 'Custom Embed Link', icon: '🌐', badgeAr: 'رابط', descriptionAr: 'تضمين وتشغيل أي نشاط خارجي من موقع Wordwall' },
 ];
 
+export interface WordwallQuizQuestion {
+  qAr: string;
+  qEn: string;
+  optionsAr: string[];
+  optionsEn: string[];
+  correct: number;
+  explanationAr: string;
+}
+
+export interface WordwallMatchPair {
+  id: string;
+  term: string;
+  defAr: string;
+  defEn: string;
+}
+
+export interface WordwallTrueFalse {
+  statementAr: string;
+  statementEn: string;
+  isTrue: boolean;
+  explanationAr: string;
+}
+
+export interface WordwallMissingWord {
+  sentenceAr: string;
+  wordOptionsAr: string[];
+  correctWord: string;
+}
+
 export interface WordwallTopicGameData {
-  quizQuestions: {
-    qAr: string;
-    qEn: string;
-    optionsAr: string[];
-    optionsEn: string[];
-    correct: number;
-    explanationAr: string;
-  }[];
-  matchPairs: {
-    id: string;
-    term: string;
-    defAr: string;
-    defEn: string;
-  }[];
-  trueFalseStatements: {
-    statementAr: string;
-    statementEn: string;
-    isTrue: boolean;
-    explanationAr: string;
-  }[];
+  quizQuestions: WordwallQuizQuestion[];
+  matchPairs: WordwallMatchPair[];
+  trueFalseStatements: WordwallTrueFalse[];
   anagramTerm: string;
-  missingWordSentence: {
-    sentenceAr: string;
-    wordOptionsAr: string[];
-    correctWord: string;
-  };
+  anagramTerms: string[];
+  missingWordSentence: WordwallMissingWord;
+  missingWordSentences: WordwallMissingWord[];
   groupSortData: {
     cat1Ar: string;
     cat1En: string;
@@ -115,25 +125,75 @@ const transformersData: WordwallTopicGameData = {
       optionsEn: ['Query, Key, and Value (Q, K, V)', 'Input, Hidden, Output', 'Weight, Bias, Gradient', 'Encoder, Decoder, Classifier'],
       correct: 0,
       explanationAr: 'كل رمز يُسقط خطياً إلى متجهات Q و K و V لحساب الارتباط السياقي والقيمة الموزونة.'
+    },
+    {
+      qAr: 'ما وظيفة طبقة الانتباه المقنع (Masked Multi-Head Attention) داخل مفكك الشفرة (Decoder)؟',
+      qEn: 'What is the role of Masked Multi-Head Attention in the Transformer Decoder?',
+      optionsAr: ['منع النموذج من رؤية الكلمات اللاحقة في المستقبل أثناء التوليد التلقائي', 'إخفاء الأخطاء الإملائية في النص', 'تشفير كلمات المرور في قاعدة البيانات', 'تقليص عدد الطبقات إلى النصف'],
+      optionsEn: ['Prevents attending to subsequent future tokens during auto-regressive decoding', 'Masks spelling mistakes', 'Encrypts user passwords', 'Prunes half the layers'],
+      correct: 0,
+      explanationAr: 'القناع المثلثي (Causal Mask) يحجب التوكنز اللاحقة ليضمن أن توليد الكلمة الحالية يعتمد فقط على الكلمات السابقة.'
+    },
+    {
+      qAr: 'ما الميزة الجوهرية لاستخدام Multi-Head Attention بدلاً من رأس انتباه وحيد Single Head؟',
+      qEn: 'What is the key advantage of Multi-Head Attention over a single attention head?',
+      optionsAr: ['التقاط علاقات نحوية ودلالية متعددة عبر فضاءات تمثيل فرعية مختلفة بالتزامن', 'مضاعفة سرعة المعالج المركزي 10 مرات', 'حذف الحاجة لبيانات التدريب', 'تقليل استهلاك الذاكرة إلى الصفر'],
+      optionsEn: ['Simultaneously capturing varied syntactic & semantic relationships across sub-spaces', '10x CPU clock acceleration', 'Eliminates training datasets', 'Zero memory footprint'],
+      correct: 0,
+      explanationAr: 'تعدد الرؤوس يسمح للنموذج بتمثيل علاقات مختلفة (مثل الفاعل، الصفة، المفعول به) في فضاءات رياضية مستقلة.'
+    },
+    {
+      qAr: 'ما دور روابط التخطي والتطبيع المتبقي (Residual Connections & LayerNorm) بعد كل طبقة فرعية؟',
+      qEn: 'What is the purpose of Residual Connections and LayerNorm after each sublayer?',
+      optionsAr: ['تسهيل تدفق المشتقات الرياضية في الشبكات العميقة واستقرار عملية التدريب', 'تحويل الأرقام إلى نصوص مفهومة', 'ضغط الصور المدخلة للنموذج', 'إيقاف التدريب بعد دورة واحدة'],
+      optionsEn: ['Stabilizes training & enables smooth gradient flow across deep networks', 'Converts floats into strings', 'Downsamples input images', 'Halts training after one epoch'],
+      correct: 0,
+      explanationAr: 'وصلات التخطي (Add & Norm) تحمي النموذج من مشكلة تلاشي التدرج وتسمح بتدريب مئات الطبقات بثبات تام.'
     }
   ],
   matchPairs: [
+    // Round 1
     { id: '1', term: 'Self-Attention', defAr: 'حساب ترابط كل كلمة مع كافة الكلمات في السياق', defEn: 'Computes contextual correlation between all words' },
     { id: '2', term: 'Positional Encoding', defAr: 'حقن معلومات ترتيب الكلمات داخل متجهات التضمين', defEn: 'Injects sequence order into token embeddings' },
     { id: '3', term: 'Multi-Head Attention', defAr: 'تقسيم الانتباه عبر فضاءات متعددة لالتقاط علاقات متنوعة', defEn: 'Splits attention into multiple representation subspaces' },
     { id: '4', term: 'Feed-Forward Sublayer', defAr: 'شبكة عصبية خطية غير خطية تطبق تحويلاً مستقلاً لكل موضع', defEn: 'Applies position-wise non-linear transformations' },
+    // Round 2
+    { id: '5', term: 'Scaled Dot-Product', defAr: 'ضرب المصفوفات QK^T مع القسمة على جذر البعد √d_k', defEn: 'Dot-product scaled by square root of key dimension' },
+    { id: '6', term: 'Query / Key / Value', defAr: 'المتجهات الثلاثة الناتجة عن إسقاط كل توكن لتحديد وزنه', defEn: 'Triplet projections defining attention weighting' },
+    { id: '7', term: 'Masked Attention', defAr: 'حجب الكلمات المستقبلية في الديكودر لضمان التوليد السببي', defEn: 'Causal masking preventing lookahead in decoder' },
+    { id: '8', term: 'Encoder-Decoder Cross', defAr: 'ربط مخرجات المشفر بمفاتيح وقيم المفكك لترجمة المعنى', defEn: 'Connects encoder keys/values with decoder queries' },
   ],
   trueFalseStatements: [
     { statementAr: 'تسمح معمارية Transformer بمعالجة الرموز بالتوازي الكامل مما يوفر تسريعاً ضخماً على معالجات GPUs مقارنة بـ RNN.', statementEn: 'Transformers allow full parallelization, offering massive GPU speedups over sequential RNNs.', isTrue: true, explanationAr: 'صحيح! إلغاء الاعتمادية الزمنية سمح بالتدريب المتوازي الفائق على وحدات GPU.' },
     { statementAr: 'في مصفوفة الانتباه، يتم ضرب الاستعلام (Query) مباشرة بالقيمة (Value) دون استخدام المفتاح (Key).', statementEn: 'In attention, Query is directly multiplied with Value without using Key.', isTrue: false, explanationAr: 'خطأ! يتم ضرب Query مع Key أولاً لقياس الشبه الدلالي، ثم ضرب النتيجة بالقيمة Value.' },
-    { statementAr: 'تستخدم دالة Softmax لتحويل درجات حاصل الضرب القياسي إلى توزيع احتمالي مجموع أوزانه 1.', statementEn: 'Softmax normalizes scaled dot products into an attention probability distribution summing to 1.', isTrue: true, explanationAr: 'صحيح! Softmax تضمن أن درجات الانتباه تشكل أوزاناً نسبية موجبة مجموعها 1.' }
+    { statementAr: 'تستخدم دالة Softmax لتحويل درجات حاصل الضرب القياسي إلى توزيع احتمالي مجموع أوزانه 1.', statementEn: 'Softmax normalizes scaled dot products into an attention probability distribution summing to 1.', isTrue: true, explanationAr: 'صحيح! Softmax تضمن أن درجات الانتباه تشكل أوزاناً نسبية موجبة مجموعها 1.' },
+    { statementAr: 'معمارية Transformer الكلاسيكية لا تحتاج لأي دوال تنشيط غير خطية على الإطلاق.', statementEn: 'Transformers require zero non-linear activation functions whatsoever.', isTrue: false, explanationAr: 'خطأ! تحتوي طبقات Feed-Forward على دوال تنشيط مثل ReLU أو GELU لاستخلاص اللاخطية.' },
+    { statementAr: 'التضمين الموضعي الجيبي (Sinusoidal Positional Encoding) يسمح للنموذج باستيعاب أطوال نصوص تتجاوز ما شاهده في التدريب.', statementEn: 'Sinusoidal Positional Encodings generalize well to sequence lengths unseen during training.', isTrue: true, explanationAr: 'صحيح! الدوال المثلثية الدورية تسمح باستقراء المواضع النسبية بكفاءة رياضية.' }
   ],
   anagramTerm: 'ATTENTION',
+  anagramTerms: ['ATTENTION', 'ENCODER', 'DECODER', 'EMBEDDING', 'TRANSFORMER'],
   missingWordSentence: {
     sentenceAr: 'تعتمد معمارية المحولات على ميكانيزم الـ __________ لمقارنة كل توكن بجميع عناصر السياق بالتوازي.',
     wordOptionsAr: ['Self-Attention', 'Convolution', 'Pooling', 'Backpropagation'],
     correctWord: 'Self-Attention'
   },
+  missingWordSentences: [
+    {
+      sentenceAr: 'تعتمد معمارية المحولات على ميكانيزم الـ __________ لمقارنة كل توكن بجميع عناصر السياق بالتوازي.',
+      wordOptionsAr: ['Self-Attention', 'Convolution', 'Pooling', 'Backpropagation'],
+      correctWord: 'Self-Attention'
+    },
+    {
+      sentenceAr: 'تُضاف متجهات الـ __________ الموضعية لتعويض غياب الترتيب التسلسلي الزمني في Transformer.',
+      wordOptionsAr: ['Positional Encoding', 'Batch Normalization', 'Max Pooling', 'Gradient Clip'],
+      correctWord: 'Positional Encoding'
+    },
+    {
+      sentenceAr: 'يستخدم مفكك الشفرة تقنية الـ __________ لحجب الكلمات المستقبلية وضمان التوليد السببي الصحيح.',
+      wordOptionsAr: ['Masking', 'Upsampling', 'Flattening', 'Quantization'],
+      correctWord: 'Masking'
+    }
+  ],
   groupSortData: {
     cat1Ar: '🔷 مكونات مشفر المحول (Encoder)',
     cat1En: 'Encoder Components',
@@ -143,7 +203,9 @@ const transformersData: WordwallTopicGameData = {
       { textAr: 'انتباه ذاتي قياسي (Multi-Head Self-Attention)', textEn: 'Multi-Head Self-Attention', cat: 1 },
       { textAr: 'انتباه مقنّع للرموز اللاحقة (Masked Self-Attention)', textEn: 'Masked Self-Attention', cat: 2 },
       { textAr: 'انتباه متقاطع مع مخرجات المشفر (Cross-Attention)', textEn: 'Encoder-Decoder Cross-Attention', cat: 2 },
-      { textAr: 'شبكة تغذية أمامية خطية (Feed Forward Network)', textEn: 'Feed-Forward Network', cat: 1 }
+      { textAr: 'شبكة تغذية أمامية خطية (Feed Forward Network)', textEn: 'Feed-Forward Network', cat: 1 },
+      { textAr: 'تطبيع الطبقات مع التخطي (Add & LayerNorm)', textEn: 'Residual LayerNorm', cat: 1 },
+      { textAr: 'طبقة التوقع الاحتمالي الخطي (Linear Softmax Head)', textEn: 'Linear Softmax Head', cat: 2 }
     ]
   },
   rankSteps: [
@@ -196,25 +258,75 @@ const concurrencyData: WordwallTopicGameData = {
       optionsEn: ['Race Condition and data corruption', 'Power surge', 'Automatic memory flush', 'Silent server shutdown'],
       correct: 0,
       explanationAr: 'حالة التسابق (Race Condition) تؤدي لنتائج عشوائية وتلف المتغيرات المشتركة بسبب التداخل غير المنظم للعمليات.'
+    },
+    {
+      qAr: 'ما هو المأزق القاتل (Deadlock) في البرمجة متعددة الخيوط؟',
+      qEn: 'What is a Deadlock in multi-threaded concurrent programming?',
+      optionsAr: ['توقف برنامج دائم لأن كل خيط ينتظر قفلاً بحوزة الخيط الآخر في حلقة مفرغة', 'زيادة حرارة بطاقة الشاشة', 'تكرار طباعة المتغيرات مرتين', 'مسح ملفات السورس كود تلقائياً'],
+      optionsEn: ['Permanent freeze where two or more threads wait on each other circular locks', 'GPU overheating', 'Printing variables twice', 'Auto-deleting source files'],
+      correct: 0,
+      explanationAr: 'المأزق (Deadlock) يحدث عند الانتظار الدائري للأقفال، بحيث لا يمكن لأي خيط التقدم أو تحرير موارده.'
+    },
+    {
+      qAr: 'ما فائدة استخدام Semaphore بدلاً من القفل العادي Mutex Lock؟',
+      qEn: 'What is the primary benefit of using a Semaphore over a standard Mutex Lock?',
+      optionsAr: ['السماح لعدد محدد (N) من الخيوط بالوصول لمورد مشترك في نفس الوقت بدلاً من خيط واحد فقط', 'تسريع قراءة ملفات الفيديو', 'إلغاء قفل الـ GIL في بايثون', 'تقليل حجم كود البرنامج'],
+      optionsEn: ['Allows up to N threads to access a shared resource concurrently instead of just 1', 'Accelerating video I/O', 'Disabling Python GIL completely', 'Minimizing code line count'],
+      correct: 0,
+      explanationAr: 'الـ Semaphore يمتلك عداداً داخلياً يسمح لعدد مبرمج من الخيوط (مثل 5 اتصالات بقاعدة البيانات) بالعمل معاً.'
+    },
+    {
+      qAr: 'عند كتابة خادم ويب يستقبل 10,000 اتصال HTTP متزامن، ما هو الخيار الهندسي الأكثر كفاءة للذاكرة في بايثون؟',
+      qEn: 'For serving 10,000 concurrent HTTP requests with minimal memory overhead in Python, which is best?',
+      optionsAr: ['AsyncIO وحلقة الأحداث غير الحاجبة (Event Loop)', 'إنشاء 10,000 خيط نظام Thread مستقل', 'إنشاء 10,000 عملية Process منفصلة', 'تنفيذ الطلبات بتسلسل تتابعي Synchronous'],
+      optionsEn: ['AsyncIO non-blocking Event Loop', 'Spawning 10,000 OS Threads', 'Spawning 10,000 distinct Processes', 'Sequential Synchronous loop'],
+      correct: 0,
+      explanationAr: 'خيوط النظام والعمليات تستهلك ميجابايتات لكل خيط، بينما كائنات Coroutines في AsyncIO تستهلك بايتات قليلة فقط.'
     }
   ],
   matchPairs: [
+    // Round 1
     { id: '1', term: 'Global Interpreter Lock', defAr: 'قفل مفسر يمنع التشغيل المتوازي للخيوط في CPython', defEn: 'CPython mutex preventing simultaneous thread execution' },
     { id: '2', term: 'Multiprocessing', defAr: 'إنشاء عمليات مستقلة بذاكرة منفصلة لتجاوز GIL في مهام المعالج', defEn: 'Spawns isolated processes with separate memory' },
     { id: '3', term: 'AsyncIO Event Loop', defAr: 'حلقة أحداث ذكية تدير المهام غير الحاجبة عبر Coroutines', defEn: 'Event loop managing non-blocking cooperative coroutines' },
     { id: '4', term: 'Mutex Lock (Acquire/Release)', defAr: 'آلية مزامنة تضمن حصر دخول المنطقة الحرجة لخيط واحد فقط', defEn: 'Synchronization primitive guarding critical sections' },
+    // Round 2
+    { id: '5', term: 'Semaphore Counter', defAr: 'إدارة وصول متزامن لعدد محدد N من الخيوط لمورد مشترك', defEn: 'Controls access for up to N concurrent threads' },
+    { id: '6', term: 'Race Condition', defAr: 'تضارب وتلف البيانات المشتركة بسبب تعديل غير منسق بين خيوط', defEn: 'Data corruption from unsynchronized concurrent writes' },
+    { id: '7', term: 'Deadlock Stasis', defAr: 'تجمد تام ناتج عن انتظار دائري متبادل للأقفال بين الخيوط', defEn: 'Circular lock dependency causing permanent freeze' },
+    { id: '8', term: 'Critical Section', defAr: 'جزء الكود الحساس الذي يعدل الذاكرة المشتركة ويجب حمايته', defEn: 'Code block accessing shared state needing synchronization' },
   ],
   trueFalseStatements: [
     { statementAr: 'تستفيد مهام قراءة الملفات وطلبات الشبكة (I/O-Bound) بشكل هائل من Multi-Threading لأن بايثون يحرر الـ GIL أثناء الانتظار.', statementEn: 'I/O-bound tasks benefit greatly from Multi-Threading because CPython releases the GIL during wait states.', isTrue: true, explanationAr: 'صحيح! أثناء انتظار الشبكة أو القرص يحرر بايثون القفل لخيط آخر.' },
     { statementAr: 'تسمح مكتبة Threading العادية بتشغيل الحسابات الرياضية المكثفة على 8 أنوية CPU بالتوازي الحقيقي في CPython.', statementEn: 'Standard Threading achieves true multi-core parallel speedup on CPU-bound math in CPython.', isTrue: false, explanationAr: 'خطأ! قفل الـ GIL يجبر الخيوط على التناوب على نواة واحدة فقط في CPython للمهام الحسابية.' },
-    { statementAr: 'تساعد كائنات Semaphores في تحديد الحد الأقصى لعدد الخيوط المسموح لها بالوصول لمورد محدد في نفس الوقت.', statementEn: 'Semaphores limit the maximum number of concurrent threads accessing a resource.', isTrue: true, explanationAr: 'صحيح! كائن Semaphore يحتفظ بعداد يحدد كم خيط يستطيع الدخول بالتزامن.' }
+    { statementAr: 'تساعد كائنات Semaphores في تحديد الحد الأقصى لعدد الخيوط المسموح لها بالوصول لمورد محدد في نفس الوقت.', statementEn: 'Semaphores limit the maximum number of concurrent threads accessing a resource.', isTrue: true, explanationAr: 'صحيح! كائن Semaphore يحتفظ بعداد يحدد كم خيط يستطيع الدخول بالتزامن.' },
+    { statementAr: 'في مكتبة AsyncIO، يؤدي استدعاء دالة time.sleep() العادية إلى إيقاف كامل حلقة الأحداث وتجميد كل المهام الأخرى.', statementEn: 'Calling time.sleep() in an async coroutine blocks the entire event loop.', isTrue: true, explanationAr: 'صحيح! يجب استخدام await asyncio.sleep() غير الحاجبة بدلاً منها.' },
+    { statementAr: 'تتشارك العمليات المنشأة عبر Multiprocessing نفس فضاء الذاكرة بدون الحاجة لقنوات IPC أو Queues.', statementEn: 'Processes in Multiprocessing share identical memory space with no IPC needed.', isTrue: false, explanationAr: 'خطأ! كل عملية تمتلك فضاء ذاكرة منفصل تماماً وتحتاج لقنوات Queue أو Pipe لتبادل البيانات.' }
   ],
   anagramTerm: 'CONCURRENCY',
+  anagramTerms: ['CONCURRENCY', 'THREADS', 'ASYNCIO', 'MUTEX', 'DEADLOCK'],
   missingWordSentence: {
     sentenceAr: 'يمنع قفل الـ __________ في مفسر CPython التشغيل المتوازي للخيوط في العمليات المقيدة بالمعالج CPU-Bound.',
     wordOptionsAr: ['GIL', 'AsyncIO', 'ThreadPool', 'Semaphore'],
     correctWord: 'GIL'
   },
+  missingWordSentences: [
+    {
+      sentenceAr: 'يمنع قفل الـ __________ في مفسر CPython التشغيل المتوازي للخيوط في العمليات المقيدة بالمعالج CPU-Bound.',
+      wordOptionsAr: ['GIL', 'AsyncIO', 'ThreadPool', 'Semaphore'],
+      correctWord: 'GIL'
+    },
+    {
+      sentenceAr: 'يحدث الـ __________ عندما تنتظر خيوط متعددة أقفالاً بحوزة بعضها البعض في حلقة انتظار دائمة.',
+      wordOptionsAr: ['Deadlock', 'Overfitting', 'Pooling', 'Tokenization'],
+      correctWord: 'Deadlock'
+    },
+    {
+      sentenceAr: 'تعتمد البرمجة غير الحاجبة في AsyncIO على حلقة الـ __________ لإدارة تنفيذ دوال الـ Coroutines.',
+      wordOptionsAr: ['Event Loop', 'Kernel Convolution', 'Hidden Layer', 'Optimizer Adam'],
+      correctWord: 'Event Loop'
+    }
+  ],
   groupSortData: {
     cat1Ar: '⚡ مهام مقيدة بالإدخال/الإخراج (I/O-Bound)',
     cat1En: 'I/O-Bound Tasks',
@@ -224,7 +336,9 @@ const concurrencyData: WordwallTopicGameData = {
       { textAr: 'تحميل ملفات وتصفح صفحات الويب عبر HTTP', textEn: 'Web scraping and HTTP requests', cat: 1 },
       { textAr: 'ضرب مصفوفات وتشفير ومعالجة صور ضخمة', textEn: 'Large matrix multiplication and image processing', cat: 2 },
       { textAr: 'الاستعلام من قواعد البيانات والانتظار الشبكي', textEn: 'SQL Database queries and network socket waits', cat: 1 },
-      { textAr: 'تدريب شبكات عصبية وحساب المشتقات الرياضية', textEn: 'Neural network training and gradient math', cat: 2 }
+      { textAr: 'تدريب شبكات عصبية وحساب المشتقات الرياضية', textEn: 'Neural network training and gradient math', cat: 2 },
+      { textAr: 'قراءة وكتابة ملفات سجلات Log ضخمة على القرص', textEn: 'Disk log reading & writing', cat: 1 },
+      { textAr: 'تشفير وضغط مقاطع الفيديو بدقة عالية', textEn: 'Video encoding and ray tracing', cat: 2 }
     ]
   },
   rankSteps: [
@@ -277,25 +391,66 @@ const cnnData: WordwallTopicGameData = {
       optionsEn: ['Flatten Layer', 'Softmax Layer', 'Freeze Layer', 'Upsampling Layer'],
       correct: 0,
       explanationAr: 'تقوم طبقة Flatten بفرد مصفوفات الميزات ثلاثية الأبعاد إلى متجه طولي لإدخاله للطبقات الخطية Fully Connected.'
+    },
+    {
+      qAr: 'ما هو دور خطوة الـ Stride في عملية الالتفاف Convolution؟',
+      qEn: 'What does the Stride parameter define in convolutional operations?',
+      optionsAr: ['مقدار قفزة الفلتر على شبكة البكسلات أفقياً ورأسياً في كل خطوة', 'عدد طبقات الشبكة العصبية', 'درجة شفافية الصورة الرقمية', 'نسبة الحذف العشوائي في Dropout'],
+      optionsEn: ['Step size by which the kernel shifts horizontally and vertically', 'Total neural layers', 'Image alpha transparency', 'Dropout drop rate'],
+      correct: 0,
+      explanationAr: 'معامل Stride يحدد عدد البكسلات التي يقفزها الفلتر. زيادة Stride تؤدي لتقليص أبعاد الخريطة الناتجة.'
+    },
+    {
+      qAr: 'ما الهدف من تطبيق تقنيات Data Augmentation (التدوير، الانعكاس، الاقتطاع) على صور تدريب Kaggle Intel؟',
+      qEn: 'Why is Data Augmentation (rotations, flips, crops) essential for Intel dataset training?',
+      optionsAr: ['زيادة تنوع العينات وتدريب النموذج على مقاومة التغيرات وتقليل فرط التخصيص Overfitting', 'تقليل حجم ملفات التدريب على القرص', 'تسريع قراءة الصور بـ 100 ضعف', 'حذف الصور غير الواضحة تلقائياً'],
+      optionsEn: ['Enhance sample diversity, train invariant representations & reduce overfitting', 'Shrink dataset disk footprint', '100x image loading speed', 'Auto-delete blurred images'],
+      correct: 0,
+      explanationAr: 'الزيادة الاصطناعية للبيانات تُكسب النموذج قدرة على التعرف على المناظر (جبال، غابات، بحار) بزوايا وإضاءات متنوعة.'
     }
   ],
   matchPairs: [
+    // Round 1
     { id: '1', term: 'Convolution Kernel', defAr: 'مصفوفة أوزان صغيرة تتحرك لاستخلاص الحواف والخصائص البصرية', defEn: 'Weight matrix sliding over pixels to extract features' },
     { id: '2', term: 'Max Pooling', defAr: 'تقليص الحجم المكاني واختيار أعلى استجابة مميزة في كل نافذة', defEn: 'Spatial downsampling taking maximum activation' },
     { id: '3', term: 'Feature Map', defAr: 'مصفوفة الاستجابة الناتجة عن تطبيق الفلتر على الصورة', defEn: 'Activation grid resulting from kernel convolution' },
     { id: '4', term: 'Flatten Layer', defAr: 'تحويل الميزات متعددة الأبعاد لمتجه أحادي للطبقة الكثيفة', defEn: 'Transforms 2D/3D maps into a 1D dense vector' },
+    // Round 2
+    { id: '5', term: 'Stride Step', defAr: 'مسافة قفز الفلتر عبر بكسلات الصورة في كل حركة', defEn: 'Pixel hop distance per kernel sliding step' },
+    { id: '6', term: 'Same Padding', defAr: 'إضافة إطار أصفار للحواف للحفاظ على الأبعاد المكانية للخرج', defEn: 'Zero border padding maintaining input spatial resolution' },
+    { id: '7', term: 'Batch Normalization', defAr: 'تطبيع توزيع مخرجات كل طبقة لتسريع واستقرار التدريب', defEn: 'Normalizes intermediate layer distribution' },
+    { id: '8', term: 'Receptive Field', defAr: 'مساحة بكسلات الصورة المدخلة التي تراها وحدة عصبية معينة', defEn: 'Input patch visible to a specific neural feature unit' },
   ],
   trueFalseStatements: [
     { statementAr: 'تعتمد الشبكات التلافيفية CNN على مبدأ مشاركة الأوزان (Weight Sharing) لتقليل عدد المعاملات مقارنة بالشبكات الكثيفة.', statementEn: 'CNNs rely on parameter sharing to drastically reduce weights compared to dense MLPs.', isTrue: true, explanationAr: 'صحيح! الفلتر نفسه يُطبق على كافة أجزاء الصورة مما يوفر كفاءة حسابية مذهلة.' },
     { statementAr: 'إضافة الحشو نفسه (Same Padding) تؤدي دائماً إلى إنقاص أبعاد الصورة إلى النصف.', statementEn: 'Same Padding always halves the spatial dimensions of an image.', isTrue: false, explanationAr: 'خطأ! Same Padding يضيف أصفاراً على الحواف للحفاظ على الأبعاد الأصلية دون نقصان.' },
-    { statementAr: 'تساعد طبقة Dropout في شبكات CNN على تقليل فرط التخصيص (Overfitting) عن طريق إسقاط وحدات عشوائية أثناء التدريب.', statementEn: 'Dropout prevents overfitting in CNNs by randomly deactivating units during training.', isTrue: true, explanationAr: 'صحيح! إسقاط الوحدات عشوائياً يمنع النموذج من الاعتماد الزائد على ملامح محددة.' }
+    { statementAr: 'تساعد طبقة Dropout في شبكات CNN على تقليل فرط التخصيص (Overfitting) عن طريق إسقاط وحدات عشوائية أثناء التدريب.', statementEn: 'Dropout prevents overfitting in CNNs by randomly deactivating units during training.', isTrue: true, explanationAr: 'صحيح! إسقاط الوحدات عشوائياً يمنع النموذج من الاعتماد الزائد على ملامح محددة.' },
+    { statementAr: 'تعمل طبقة Average Pooling على التقاط أعلى بكسل في النافذة فقط وإهمال بقية القيم.', statementEn: 'Average Pooling picks the single maximum pixel in each patch.', isTrue: false, explanationAr: 'خطأ! Average Pooling تحسب المتوسط الحسابي لكافة البكسلات في النافذة.' }
   ],
   anagramTerm: 'CONVOLUTION',
+  anagramTerms: ['CONVOLUTION', 'POOLING', 'KERNEL', 'FEATURE', 'PADDING'],
   missingWordSentence: {
     sentenceAr: 'تُستخدم طبقة الـ __________ في شبكات CNN لتقليل الأبعاد الحجمية للخرائط واستخلاص أعلى الملامح استجابة.',
     wordOptionsAr: ['Max Pooling', 'Softmax', 'Embedding', 'Backprop'],
     correctWord: 'Max Pooling'
   },
+  missingWordSentences: [
+    {
+      sentenceAr: 'تُستخدم طبقة الـ __________ في شبكات CNN لتقليل الأبعاد الحجمية للخرائط واستخلاص أعلى الملامح استجابة.',
+      wordOptionsAr: ['Max Pooling', 'Softmax', 'Embedding', 'Backprop'],
+      correctWord: 'Max Pooling'
+    },
+    {
+      sentenceAr: 'تتحرك مصفوفة الـ __________ عبر بكسلات الصورة لاستخلاص الحواف والأنسجة والملامح.',
+      wordOptionsAr: ['Kernel', 'Dropout', 'Embedding', 'Learning Rate'],
+      correctWord: 'Kernel'
+    },
+    {
+      sentenceAr: 'تقوم طبقة الـ __________ بفرد الخرائط ثنائية الأبعاد إلى متجه طولي قبل تغذية الطبقات الكثيفة.',
+      wordOptionsAr: ['Flatten', 'Padding', 'Residual', 'Sigmoid'],
+      correctWord: 'Flatten'
+    }
+  ],
   groupSortData: {
     cat1Ar: '🖼️ طبقات استخلاص الملامح المكانية',
     cat1En: 'Feature Extraction Layers',
@@ -305,7 +460,9 @@ const cnnData: WordwallTopicGameData = {
       { textAr: 'طبقة الالتفاف ثنائية الأبعاد (Conv2D)', textEn: '2D Convolution (Conv2D)', cat: 1 },
       { textAr: 'الطبقة الكثيفة المتصلة بالكامل (Dense Layer)', textEn: 'Fully Connected Dense Layer', cat: 2 },
       { textAr: 'طبقة التجميع الأقصى (MaxPooling2D)', textEn: 'Max Pooling (MaxPooling2D)', cat: 1 },
-      { textAr: 'طبقة التنشيط الاحتمالي للمخرجات (Softmax Output)', textEn: 'Softmax Output Probabilities', cat: 2 }
+      { textAr: 'طبقة التنشيط الاحتمالي للمخرجات (Softmax Output)', textEn: 'Softmax Output Probabilities', cat: 2 },
+      { textAr: 'طبقة تطبيع الدفعات (BatchNormalization)', textEn: 'Batch Normalization', cat: 1 },
+      { textAr: 'طبقة تسطيح المصفوفات لمتجه أحادي (Flatten)', textEn: 'Flatten 1D Layer', cat: 2 }
     ]
   },
   rankSteps: [
@@ -358,25 +515,66 @@ const rnnData: WordwallTopicGameData = {
       optionsEn: ['Binary probability (Positive vs Negative) via Sigmoid activation', 'Generative long essay output', '3D heatmap of reviews', 'Random matrix vector'],
       correct: 0,
       explanationAr: 'مجموعة Amazon Polarity مهمة تصنيف مشاعر ثنائية (Positive vs Negative)، يناسبها مخرج ثنائي عبر Sigmoid.'
+    },
+    {
+      qAr: 'ما الذي يمرره كل عنصر زمني إلى العنصر اللاحق في الشبكة التكرارية القياسية؟',
+      qEn: 'What carries sequential information between timesteps in recurrent neural networks?',
+      optionsAr: ['الحالة الخفية المحدثة (Hidden State h_t)', 'مصفوفة بكسلات الصورة', 'أوزان نموذج Transformer', 'قفل مفسر بايثون GIL'],
+      optionsEn: ['Updated Hidden State h_t', 'Image pixel matrix', 'Transformer weights', 'Python GIL lock'],
+      correct: 0,
+      explanationAr: 'الحالة الخفية (Hidden State) تلعب دور الذاكرة المؤقتة، حيث تنقل خلاصة السياق الزمني الماضي للخطوة الحالية.'
+    },
+    {
+      qAr: 'ما الفائدة من استخدام الشبكات التكرارية ثنائية الاتجاه (Bidirectional RNN / LSTM)؟',
+      qEn: 'What is the key benefit of Bidirectional LSTMs in NLP tasks?',
+      optionsAr: ['قراءة السياق النصي من البداية للنهاية ومن النهاية للبداية معاً لالتقاط المعنى المزدوج', 'مضاعفة استهلاك الطاقة الكهربائية', 'الاستغناء عن تدريب النموذج', 'حفظ النصوص كملفات صوتية'],
+      optionsEn: ['Processes sequence in forward and backward directions simultaneously for full context', 'Doubles wattage', 'Eliminates training', 'Saves text as audio'],
+      correct: 0,
+      explanationAr: 'الشبكات ثنائية الاتجاه تسمح للكلمة الحالية بالاطلاع على ما قبلها وما بعدها في نفس الوقت لفهم أعمق للمعنى.'
     }
   ],
   matchPairs: [
+    // Round 1
     { id: '1', term: 'LSTM Forget Gate', defAr: 'تحديد المعلومات القديمة الواجب حذفها من خلية الذاكرة عبر Sigmoid', defEn: 'Decides what past information to discard via Sigmoid' },
     { id: '2', term: 'Cell State (C_t)', defAr: 'قناة النقل الخطية السريعة لحفظ المعلومات عبر خطوات زمنية بعيدة', defEn: 'Long-term linear memory highway preserving gradient flow' },
     { id: '3', term: 'GRU Reset Gate', defAr: 'تحديد كمية دمج الحالة السابقة مع المدخل الحالي في GRU', defEn: 'Determines how to combine new input with previous memory' },
     { id: '4', term: 'Vanishing Gradient', defAr: 'تضاؤل المشتقات في الخطوات السابقة مما يمنع تعلم السياقات الطويلة', defEn: 'Exponential gradient decay preventing long-term learning' },
+    // Round 2
+    { id: '5', term: 'LSTM Input Gate', defAr: 'تحديد المعلومات الجديدة الواجب تخزينها في خلية الذاكرة', defEn: 'Decides which new information to store in cell state' },
+    { id: '6', term: 'LSTM Output Gate', defAr: 'حساب الحالة المخفية h_t التي ستمر للخطوة اللاحقة والمخرجات', defEn: 'Calculates hidden state h_t passed to next timestep' },
+    { id: '7', term: 'GRU Update Gate', defAr: 'التحكم بنسبة الحفاظ على الذاكرة السابقة مقابل تبني الحالة الجديدة', defEn: 'Balances keeping past memory versus adopting new state' },
+    { id: '8', term: 'Hidden State (h_t)', defAr: 'متجه الذاكرة المؤقتة الذي يلخص تاريخ السياق الزمني الماضي', defEn: 'Short-term context vector summarizing sequence history' },
   ],
   trueFalseStatements: [
     { statementAr: 'تعتمد شبكات LSTM على خلية الذاكرة (Cell State) كمسار نقل فائق يسمح بانسياب التدرجات دون اضمحلال سريع.', statementEn: 'LSTM uses the Cell State as a gradient superhighway preventing exponential vanishing.', isTrue: true, explanationAr: 'صحيح! الخط المباشر لخلية الذاكرة يحافظ على انتقال المشتقات عبر مئات الخطوات.' },
     { statementAr: 'تستطيع شبكات Vanilla RNN البسيطة تذكر العلاقات النصية البعيدة لمئات الكلمات بكفاءة تفوق Transformer.', statementEn: 'Vanilla RNNs retain context over hundreds of tokens better than Transformers.', isTrue: false, explanationAr: 'خطأ! تفشل Vanilla RNNs بعد خطوات قصيرة جداً بسبب تلاشي التدرجات.' },
-    { statementAr: 'تتميز شبكات GRU بامتلاكها بوابتين فقط مما يجعلها أسرع في التدريب مقارنة بـ LSTM في كثير من التطبيقات.', statementEn: 'GRUs feature only 2 gates, making them computationally lighter and faster than LSTMs.', isTrue: true, explanationAr: 'صحيح! البنيتان المدمجتان تقللان عدد المعاملات بنحو 25% مع أداء مشابه.' }
+    { statementAr: 'تتميز شبكات GRU بامتلاكها بوابتين فقط مما يجعلها أسرع في التدريب مقارنة بـ LSTM في كثير من التطبيقات.', statementEn: 'GRUs feature only 2 gates, making them computationally lighter and faster than LSTMs.', isTrue: true, explanationAr: 'صحيح! البنيتان المدمجتان تقللان عدد المعاملات بنحو 25% مع أداء مشابه.' },
+    { statementAr: 'في نموذج LSTM، تكون مخرجات بوابات التحكم معاملات رقمية بين 0 و 1 بفضل دالة التنشيط Sigmoid.', statementEn: 'LSTM gate activations range from 0 to 1 via Sigmoid.', isTrue: true, explanationAr: 'صحيح! مدى Sigmoid بين [0, 1] يمثل نسبة البوابة (0 = إغلاق تام، 1 = مرور كامل).' }
   ],
   anagramTerm: 'RECURRENT',
+  anagramTerms: ['RECURRENT', 'MEMORY', 'FORGET', 'GRADIENT', 'SEQUENCE'],
   missingWordSentence: {
     sentenceAr: 'تتحكم بوابة الـ __________ في شبكة LSTM في كمية المعلومات التي يجب محوها من خلية الذاكرة السابقة.',
     wordOptionsAr: ['Forget Gate', 'Input Gate', 'Output Gate', 'Convolution'],
     correctWord: 'Forget Gate'
   },
+  missingWordSentences: [
+    {
+      sentenceAr: 'تتحكم بوابة الـ __________ في شبكة LSTM في كمية المعلومات التي يجب محوها من خلية الذاكرة السابقة.',
+      wordOptionsAr: ['Forget Gate', 'Input Gate', 'Output Gate', 'Convolution'],
+      correctWord: 'Forget Gate'
+    },
+    {
+      sentenceAr: 'تدمج معمارية __________ خلية الذاكرة بالحالة المخفية وتعتمد فقط على بوابتي Reset و Update.',
+      wordOptionsAr: ['GRU', 'ResNet', 'BERT', 'VGG'],
+      correctWord: 'GRU'
+    },
+    {
+      sentenceAr: 'تؤدي مشكلة تلاشي الـ __________ إلى عجز الشبكات التكرارية البسيطة عن تذكر الكلمات البعيدة.',
+      wordOptionsAr: ['Gradient', 'Token', 'Weight', 'Epoch'],
+      correctWord: 'Gradient'
+    }
+  ],
   groupSortData: {
     cat1Ar: '🚪 بوابات خلية LSTM',
     cat1En: 'LSTM Gates',
@@ -386,7 +584,9 @@ const rnnData: WordwallTopicGameData = {
       { textAr: 'بوابة النسيان (Forget Gate)', textEn: 'Forget Gate', cat: 1 },
       { textAr: 'بوابة إعادة التعيين (Reset Gate)', textEn: 'Reset Gate', cat: 2 },
       { textAr: 'بوابة الإدخال (Input Gate)', textEn: 'Input Gate', cat: 1 },
-      { textAr: 'بوابة التحديث (Update Gate)', textEn: 'Update Gate', cat: 2 }
+      { textAr: 'بوابة التحديث (Update Gate)', textEn: 'Update Gate', cat: 2 },
+      { textAr: 'بوابة الإخراج (Output Gate)', textEn: 'Output Gate', cat: 1 },
+      { textAr: 'مرشح المرشحات التكيفي في GRU', textEn: 'Candidate Hidden State GRU', cat: 2 }
     ]
   },
   rankSteps: [
@@ -439,13 +639,35 @@ const loraStreamlitData: WordwallTopicGameData = {
       optionsEn: ['Magnitude scaling factor tuning the strength of low-rank updates relative to base weights', 'Number of CPU cores used', 'Ratio of pruned vocabulary', 'GPU power wattage limit'],
       correct: 0,
       explanationAr: 'المعامل α/r يضبط قوة إشارة التحديث الناتجة عن مصفوفتي LoRA بالنسبة لأوزان النموذج الأساسية المجمدة.'
+    },
+    {
+      qAr: 'ما هي الرتبة (Rank r) المناسبة والمألوفة التي تحقق توازناً مثالياً بين استهلاك الذاكرة والدقة في LoRA؟',
+      qEn: 'What rank r value is typical for balancing VRAM and adaptation accuracy in LoRA?',
+      optionsAr: ['قيم صغيرة مثل r=8 أو r=16 أو r=32', 'قيم ضخمة مثل r=500,000', 'قيمة سالبة r=-1', 'قيمة كسرية دائماً'],
+      optionsEn: ['Small integers such as r=8, r=16, or r=32', 'Giant values like r=500,000', 'Negative values like r=-1', 'Always fractional floats'],
+      correct: 0,
+      explanationAr: 'أثبتت الأوراق العلمية أن رتبة صغيرة مثل r=8 أو 16 كافية لالتقاط التكيف الدقيق مع توفير هائل في المعاملات.'
+    },
+    {
+      qAr: 'كيف تضمن واجهة Streamlit استمرار حالة الجلسة وتخزين رسائل المحادثة السابقة؟',
+      qEn: 'How does Streamlit persist chat messages across script reruns?',
+      optionsAr: ['عبر استخدام كائن قاموس حالة الجلسة st.session_state', 'بإعادة تشغيل الخادم بالكامل', 'بحفظ النصوص في ملفات مؤقتة للمتصفح', 'بمنع المستخدم من النقر على الأزرار'],
+      optionsEn: ['Using the st.session_state dictionary object', 'Rebooting the server entirely', 'Storing files in browser cache', 'Disabling button clicks'],
+      correct: 0,
+      explanationAr: 'كائن st.session_state يحافظ على المتغيرات وتاريخ المحادثة حياً عبر دورات إعادة تنفيذ السكريبت.'
     }
   ],
   matchPairs: [
+    // Round 1
     { id: '1', term: 'LoRA Adapters', defAr: 'مصفوفات رتبة منخفضة B×A تدرب بينما أوزان النموذج مجمدة', defEn: 'Low-rank trainable matrices injected into frozen weights' },
     { id: '2', term: 'QLoRA 4-bit NF4', defAr: 'تكميم أوزان الأساس بدقة 4-bit مع تكميم مزدوج لتقليص الذاكرة', defEn: '4-bit NormalFloat quantization with double quantization' },
     { id: '3', term: 'Streamlit Framework', defAr: 'بناء واجهات تفاعلية سريعة لنشر تطبيقات الذكاء الاصطناعي ببايثون', defEn: 'Rapid Python UI library for interactive ML demos' },
     { id: '4', term: 'LoRA Alpha (α)', defAr: 'معامل تحجيم لتعديل قوة تحديثات مصفوفات الرتبة المنخفضة', defEn: 'Scaling factor balancing adapter update magnitude' },
+    // Round 2
+    { id: '5', term: 'Rank Dimension (r)', defAr: 'البعد الداخلي الضيق لمصفوفتي B و A الذي يحدد عدد المعاملات', defEn: 'Bottleneck inner dimension defining adapter capacity' },
+    { id: '6', term: 'Double Quantization', defAr: 'تكميم معاملات التكميم ذاتها لتوفير بايتات إضافية من الذاكرة', defEn: 'Quantizing quantization constants for extra memory savings' },
+    { id: '7', term: 'st.session_state', defAr: 'حفظ متغيرات الجلسة وتاريخ المحادثة عند إعادة تنفيذ السكريبت', defEn: 'Persists user session variables between UI reruns' },
+    { id: '8', term: 'PEFT Library', defAr: 'مكتبة HuggingFace القياسية لتطبيق تقنيات الضبط الدقيق عالي الكفاءة', defEn: 'HuggingFace standard library for parameter-efficient tuning' },
   ],
   trueFalseStatements: [
     { statementAr: 'تسمح تقنية QLoRA بتشغيل وتدريب نماذج لغوية عملاقة مثل Llama على بطاقات رسومية استهلاكية صغيرة بفضل دقة 4-bit.', statementEn: 'QLoRA enables fine-tuning giant LLMs on consumer GPUs through 4-bit quantization.', isTrue: true, explanationAr: 'صحيح! خفض الدقة إلى 4-bit NF4 قلص استهلاك VRAM بأكثر من 65%.' },
@@ -453,11 +675,29 @@ const loraStreamlitData: WordwallTopicGameData = {
     { statementAr: 'يتميز إطار Streamlit بإعادة تنفيذ السكريبت من البداية عند كل تفاعل مع عناصر واجهة المستخدم.', statementEn: 'Streamlit reruns the whole Python script from top to bottom upon each UI interaction.', isTrue: true, explanationAr: 'صحيح! دورة تشغيل Streamlit تعيد التنفيذ عند تفاعل المستخدم مع الحفاظ على Session State.' }
   ],
   anagramTerm: 'ADAPTATION',
+  anagramTerms: ['ADAPTATION', 'STREAMLIT', 'QUANTIZE', 'FINETUNE', 'PEFT'],
   missingWordSentence: {
     sentenceAr: 'تعتمد تقنية __________ على تفكيك مصفوفة تحديث الأوزان إلى حاصل ضرب مصفوفات منخفضة الرتبة لتوفير الذاكرة.',
     wordOptionsAr: ['LoRA', 'Softmax', 'Convolution', 'Tokenization'],
     correctWord: 'LoRA'
   },
+  missingWordSentences: [
+    {
+      sentenceAr: 'تعتمد تقنية __________ على تفكيك مصفوفة تحديث الأوزان إلى حاصل ضرب مصفوفات منخفضة الرتبة لتوفير الذاكرة.',
+      wordOptionsAr: ['LoRA', 'Softmax', 'Convolution', 'Tokenization'],
+      correctWord: 'LoRA'
+    },
+    {
+      sentenceAr: 'تستخدم QLoRA تنسيق التكميم الرقمي __________ بدقة 4-bit لتوزيع الأوزان الطبيعي.',
+      wordOptionsAr: ['NormalFloat (NF4)', 'IEEE 754 Float64', 'Pure ASCII', 'Signed Byte'],
+      correctWord: 'NormalFloat (NF4)'
+    },
+    {
+      sentenceAr: 'يُتيح كائن __________ في Streamlit الحفاظ على رسائل المحادثة بين تفاعلات المستخدم.',
+      wordOptionsAr: ['session_state', 'local_cache', 'thread_lock', 'event_loop'],
+      correctWord: 'session_state'
+    }
+  ],
   groupSortData: {
     cat1Ar: '💾 تقنيات الضبط الدقيق الفعال (PEFT)',
     cat1En: 'PEFT & Quantization',
@@ -467,7 +707,9 @@ const loraStreamlitData: WordwallTopicGameData = {
       { textAr: 'مصفوفات الرتبة المنخفضة LoRA Adapters', textEn: 'Low-Rank LoRA Adapters', cat: 1 },
       { textAr: 'واجهة Streamlit لعرض مخرجات النموذج', textEn: 'Streamlit Interactive Web Dashboard', cat: 2 },
       { textAr: 'تكميم الأوزان الرباعي QLoRA 4-bit NF4', textEn: '4-bit NormalFloat Quantization', cat: 1 },
-      { textAr: 'خوادم FastAPI وواجهات الاستجابة السريعة', textEn: 'FastAPI High-Performance Endpoints', cat: 2 }
+      { textAr: 'خوادم FastAPI وواجهات الاستجابة السريعة', textEn: 'FastAPI High-Performance Endpoints', cat: 2 },
+      { textAr: 'معامل التحجيم ألفا LoRA Alpha', textEn: 'LoRA Alpha Scaling Factor', cat: 1 },
+      { textAr: 'عناصر التحكم st.slider و st.chat_input', textEn: 'Streamlit Interactive Widgets', cat: 2 }
     ]
   },
   rankSteps: [
@@ -520,25 +762,66 @@ const ragData: WordwallTopicGameData = {
       optionsEn: ['FAISS, Weaviate, and ChromaDB', 'Standard bare SQLite', 'Windows Notepad', 'Excel 2003 Sheets'],
       correct: 0,
       explanationAr: 'تعتمد منظومات RAG على Vector Databases متخصصة مثل FAISS و Weaviate و ChromaDB للبحث السريع في فضاء المتجهات.'
+    },
+    {
+      qAr: 'ما وظيفة نموذج إعادة الترتيب (Re-Ranker) في خط أنابيب RAG المتقدم Advanced RAG؟',
+      qEn: 'What is the function of a Cross-Encoder Re-Ranker in advanced RAG?',
+      optionsAr: ['إعادة تدقيق وترتيب المقاطع المسترجعة بدقة فائقة لضمان وضع الأكثر أهمية في أعلى نافذة السياق', 'حذف نصف الكلمات في السؤال', 'ترجمة السؤال إلى لغات غير مفهومة', 'ضغط حجم قاعدة البيانات'],
+      optionsEn: ['Re-scores & ranks candidate chunks with high accuracy ensuring top relevance in prompt', 'Prunes half query words', 'Translates query to gibberish', 'Compresses vector DB size'],
+      correct: 0,
+      explanationAr: 'نموذج Re-ranker يفحص السؤال والقطعة معاً بدقة تفوق البحث المتجهي الخالص، فيرتب أفضل 3 فقرات في صدارة السياق.'
+    },
+    {
+      qAr: 'ما هي ميزة استخدام المتجهات الدلالية Dense Vectors مقارنة بالبحث النصي الكلاسيكي بالكلمات المفتاحية (BM25)؟',
+      qEn: 'What is the core strength of Dense Vector Embeddings over keyword search (BM25)?',
+      optionsAr: ['القدرة على فهم المعنى والمرادفات وسياق الجملة حتى لو لم تتطابق الحروف تماماً', 'مضاعفة أخطاء الهلوسة', 'الاعتماد على الترتيب الأبجدي فقط', 'عدم دعم اللغة العربية'],
+      optionsEn: ['Understands semantic meaning, synonyms and context without exact keyword overlap', 'Doubles hallucination error', 'Relies only on alphabetical sorting', 'Zero Arabic support'],
+      correct: 0,
+      explanationAr: 'البحث الدلالي بالمتجهات يفهم مثلاً أن "الذكاء الاصطناعي" و "AI" و "تعلم الآلة" تشير لنفس المفهوم.'
     }
   ],
   matchPairs: [
+    // Round 1
     { id: '1', term: 'Vector Database (FAISS/Weaviate)', defAr: 'فهرسة متجهات التضمين والبحث فائق السرعة عن أقرب الجيران (ANN)', defEn: 'Indexes embeddings for sub-millisecond approximate nearest neighbor search' },
     { id: '2', term: 'Chunk Overlap', defAr: 'تداخل النصوص بين المقاطع لمنع فقدان السياق عند حواف التقطيع', defEn: 'Text overlap between chunks preserving boundary semantic context' },
     { id: '3', term: 'Cosine Similarity', defAr: 'قياس الزاوية بين متجهات التضمين لتحديد درجة الشبه الدلالي', defEn: 'Measures angle between embedding vectors for semantic similarity' },
     { id: '4', term: 'Hallucination Reduction', defAr: 'تقليص اختلاق الإجابات الخاطئة عبر تعزيز النموذج بحقائق مسترجعة', defEn: 'Eliminates fabricated responses by grounding in retrieved facts' },
+    // Round 2
+    { id: '5', term: 'Dense Embedding', defAr: 'تحويل الجمل والفقرات لمتجهات أرقام مكثفة تلخص المعنى الدلالي', defEn: 'Dense numerical vector representation of semantic text' },
+    { id: '6', term: 'Cross-Encoder Re-ranker', defAr: 'إعادة تقييم وترتيب المقاطع المسترجعة لضمان صدارتها في البرومبت', defEn: 'Deep re-scoring model optimizing context relevance' },
+    { id: '7', term: 'Context Window Injection', defAr: 'حقن الفقرات المسترجعة داخل نافذة السياق في System Prompt', defEn: 'Passing retrieved facts directly into LLM prompt' },
+    { id: '8', term: 'HNSW Index Algorithm', defAr: 'خوارزمية الرسوم البيانية المتدرجة لتسريع البحث التقريبي للمتجهات', defEn: 'Hierarchical Navigable Small World fast search index' },
   ],
   trueFalseStatements: [
     { statementAr: 'يتيح نظام RAG للنموذج اللغوي الإجابة على بيانات ومعلومات خاصة ومحدثة دون الحاجة لإعادة تدريبه كاملاً.', statementEn: 'RAG allows LLMs to answer domain-specific private questions without costly retraining.', isTrue: true, explanationAr: 'صحيح! استرجاع الحقائق في نافذة السياق يغني عن إعادة التدريب المكلفة.' },
     { statementAr: 'في معمارية RAG، يتم إرسال وثائق الـ PDF بالكامل كملف خام واحد داخل نص الـ Prompt للنموذج دون تقطيع.', statementEn: 'In RAG, entire raw PDF documents are passed into the prompt without any chunking.', isTrue: false, explanationAr: 'خطأ! المستندات يجب تقطيعها إلى قطع متناسقة واسترجاع الأكثر صلة فقط لتفادي قيود نافذة السياق والتكلفة.' },
-    { statementAr: 'تستخدم خوارزمية HNSW في قواعد البيانات المتجهة لتسريع البحث عن أقرب المتجهات المتشابهة في أجزاء من الثانية.', statementEn: 'HNSW algorithm enables millisecond approximate nearest neighbor retrieval in vector databases.', isTrue: true, explanationAr: 'صحيح! خوارزمية Hierarchical Navigable Small World تنشئ رسوماً بيانية متعددة الطبقات لتسريع البحث.' }
+    { statementAr: 'تستخدم خوارزمية HNSW في قواعد البيانات المتجهة لتسريع البحث عن أقرب المتجهات المتشابهة في أجزاء من الثانية.', statementEn: 'HNSW algorithm enables millisecond approximate nearest neighbor retrieval in vector databases.', isTrue: true, explanationAr: 'صحيح! خوارزمية Hierarchical Navigable Small World تنشئ رسوماً بيانية متعددة الطبقات لتسريع البحث.' },
+    { statementAr: 'يضمن RAG إجابات خالية 100% من الأخطاء حتى لو كانت المستندات المسترجعة تحوي معلومات خاطئة.', statementEn: 'RAG guarantees 100% factual accuracy even if the retrieved source docs are completely wrong.', isTrue: false, explanationAr: 'خطأ! جودة مخرجات RAG تعتمد بشكل مباشر على صحة ودقة المستندات المسترجعة (Garbage In, Garbage Out).' }
   ],
   anagramTerm: 'RETRIEVAL',
+  anagramTerms: ['RETRIEVAL', 'EMBEDDING', 'DATABASE', 'CHUNKING', 'SEMANTIC'],
   missingWordSentence: {
     sentenceAr: 'يقوم نظام الـ __________ بالبحث الدلالي في المستندات وتزويد النموذج بالسياق الموثق لمنع الهلوسة.',
     wordOptionsAr: ['RAG', 'Dropout', 'Pooling', 'Tokenizer'],
     correctWord: 'RAG'
   },
+  missingWordSentences: [
+    {
+      sentenceAr: 'يقوم نظام الـ __________ بالبحث الدلالي في المستندات وتزويد النموذج بالسياق الموثق لمنع الهلوسة.',
+      wordOptionsAr: ['RAG', 'Dropout', 'Pooling', 'Tokenizer'],
+      correctWord: 'RAG'
+    },
+    {
+      sentenceAr: 'تُقاس درجة الشبه الدلالي بين متجهات النصوص رياضياً بمقياس جيب تمام الزاوية __________.',
+      wordOptionsAr: ['Cosine Similarity', 'Euclidean Manhattan', 'Binary XOR', 'Learning Rate'],
+      correctWord: 'Cosine Similarity'
+    },
+    {
+      sentenceAr: 'يُطبق تقطيع المستندات مع __________ لحماية المعنى من الانقطاع عند أطراف المقاطع.',
+      wordOptionsAr: ['Overlap', 'Pruning', 'Dropout', 'Softmax'],
+      correctWord: 'Overlap'
+    }
+  ],
   groupSortData: {
     cat1Ar: '🔍 مرحلة الاسترجاع الدلالي (Retrieval)',
     cat1En: 'Retrieval Stage',
@@ -548,7 +831,9 @@ const ragData: WordwallTopicGameData = {
       { textAr: 'تقطيع المستندات وتوليد متجهات التضمين (Embeddings)', textEn: 'Document chunking & embedding generation', cat: 1 },
       { textAr: 'حقن السياق المسترجع داخل الـ System Prompt', textEn: 'Injecting retrieved chunks into system prompt', cat: 2 },
       { textAr: 'البحث عن أقرب جيران عبر Cosine Similarity في Weaviate', textEn: 'Cosine similarity ANN search in Weaviate', cat: 1 },
-      { textAr: 'صياغة الإجابة النهائية الموثقة بواسطة النموذج اللغوي', textEn: 'Synthesizing grounded answer with LLM', cat: 2 }
+      { textAr: 'صياغة الإجابة النهائية الموثقة بواسطة النموذج اللغوي', textEn: 'Synthesizing grounded answer with LLM', cat: 2 },
+      { textAr: 'إعادة الترتيب العميق للمقاطع عبر Cross-Encoder', textEn: 'Cross-Encoder re-ranking', cat: 1 },
+      { textAr: 'إضافة الاستشهادات والمصادر الهامشية للمستخدم', textEn: 'Appending citations and source anchors', cat: 2 }
     ]
   },
   rankSteps: [
@@ -601,13 +886,27 @@ const capstoneData: WordwallTopicGameData = {
       optionsEn: ['Modular specialization: data engineering, modeling, fullstack UI, testing & documentation', 'All members editing the same file concurrently', 'Single student doing everything', 'Postponing report until defense ends'],
       correct: 0,
       explanationAr: 'الفرق الناجحة توزع الأدوار بوضوح (Data Engineering, Modeling, Fullstack Deployment, Testing & Documentation).'
+    },
+    {
+      qAr: 'ما فائدة التحقق المتقاطع (k-fold Cross Validation) مقارنة بالتقسيم البسيط لمرة واحدة؟',
+      qEn: 'Why is k-fold Cross Validation superior to a single train/test split?',
+      optionsAr: ['التأكد من أن جودة أداء النموذج مستقرة وغير معتمدة على صدفة تقسيم محدد للبيانات', 'زيادة سرعة التدريب بـ 10 أضعاف', 'حذف البيانات غير المرغوبة تلقائياً', 'إلغاء الحاجة لمعايرة المعاملات'],
+      optionsEn: ['Ensures robust performance across varied data splits eliminating lucky split bias', '10x faster training', 'Auto-pruning unwanted data', 'Eliminates tuning'],
+      correct: 0,
+      explanationAr: 'التحقق المتقاطع يدرب ويختبر النموذج على k مجموعات مختلفة، مما يعطي تقديراً موثوقاً لتعميمه في العالم الحقيقي.'
     }
   ],
   matchPairs: [
+    // Round 1
     { id: '1', term: 'F1-Score Metric', defAr: 'المتوسط التوافقي للدقة والاسترجاع لتقييم النماذج في البيانات غير المتوازنة', defEn: 'Harmonic mean of precision & recall for imbalanced datasets' },
     { id: '2', term: 'Data Leakage Prevention', defAr: 'عزل بيانات التقييم بالكامل لمنع التقييمات الوهمية المضللة', defEn: 'Strict separation of test set to prevent spurious test optimism' },
     { id: '3', term: 'Live Demo Deployment', defAr: 'تشغيل النظام المكتمل بواجهة تفاعلية حية خلال جلسة المناقشة', defEn: 'Live working interactive system demonstrated during defense' },
     { id: '4', term: 'Cross-Validation (k-fold)', defAr: 'تقسيم متكرر للبيانات للتحقق من ثبات وقدرة النموذج على التعميم', defEn: 'k-fold data splitting validating generalization stability' },
+    // Round 2
+    { id: '5', term: 'Confusion Matrix', defAr: 'جدول يوضح أعداد التوقعات الإيجابية والسلبية الصحيحة والخاطئة', defEn: 'Tabular breakdown of TP, FP, TN, and FN outcomes' },
+    { id: '6', term: 'ROC-AUC Curve', defAr: 'منحنى يميز قدرة النموذج على الفصل بين الفئات عند مختلف العتبات', defEn: 'Threshold-invariant measure of class discrimination ability' },
+    { id: '7', term: 'Hyperparameter Search', defAr: 'البحث المنهجي (Grid/Random/Bayesian) عن أفضل إعدادات للتدريب', defEn: 'Systematic tuning for optimal learning parameters' },
+    { id: '8', term: 'Defense Presentation', defAr: 'عرض تقديمي يبرز القيمة الهندسية والقرارات المعمارية للجنة', defEn: 'Slides deck articulating technical architecture to defense panel' },
   ],
   trueFalseStatements: [
     { statementAr: 'يعتبر العرض التوضيحي المباشر (Live Demo) للمشروع ركناً أساسياً في التقييم النهائي لإثبات جاهزية النظام للعمل الفعلي.', statementEn: 'A working live demo is essential in final defense to prove end-to-end production readiness.', isTrue: true, explanationAr: 'صحيح! الـ Live Demo يبرهن على نجاح تكامل الواجهة والخادم والنماذج عملياً.' },
@@ -615,11 +914,29 @@ const capstoneData: WordwallTopicGameData = {
     { statementAr: 'يساعد كتابة تقرير تقني مفصل يحتوي على قرارات التصميم والنتائج المقارنة في رفع درجة توثيق المشروع النهائي.', statementEn: 'A detailed technical report with architectural rationale maximizes final documentation marks.', isTrue: true, explanationAr: 'صحيح! التوثيق الهندسي والمبررات المعمارية تعكس النضج التقني للفريق.' }
   ],
   anagramTerm: 'EVALUATION',
+  anagramTerms: ['EVALUATION', 'PIPELINE', 'METRICS', 'DEFENSE', 'CAPSTONE'],
   missingWordSentence: {
     sentenceAr: 'يُعد مقياس الـ __________ المعيار الأفضل لتقييم نماذج التصنيف عندما تكون فئات البيانات غير متكافئة العدد.',
     wordOptionsAr: ['F1-Score', 'Learning Rate', 'Batch Size', 'Dropout Rate'],
     correctWord: 'F1-Score'
   },
+  missingWordSentences: [
+    {
+      sentenceAr: 'يُعد مقياس الـ __________ المعيار الأفضل لتقييم نماذج التصنيف عندما تكون فئات البيانات غير متكافئة العدد.',
+      wordOptionsAr: ['F1-Score', 'Learning Rate', 'Batch Size', 'Dropout Rate'],
+      correctWord: 'F1-Score'
+    },
+    {
+      sentenceAr: 'يؤدي تسريب البيانات __________ إلى نتائج تقييم خادعة وانهيار دقة النموذج في بيئة العمل الحقيقية.',
+      wordOptionsAr: ['Data Leakage', 'Overfitting', 'Underfitting', 'Gradient Decoupling'],
+      correctWord: 'Data Leakage'
+    },
+    {
+      sentenceAr: 'يُعد تقديم عرض عملي مباشر __________ برهاناً قاطعاً على نجاح تشغيل النظام البرمجي.',
+      wordOptionsAr: ['Live Demo', 'Unit Test', 'Git Commit', 'Lint Check'],
+      correctWord: 'Live Demo'
+    }
+  ],
   groupSortData: {
     cat1Ar: '⚙️ مرحلة التطوير والتدريب',
     cat1En: 'Development & Training',
@@ -682,13 +999,35 @@ const neuralNetsData: WordwallTopicGameData = {
       optionsEn: ['A complete pass of the entire training dataset through the network', 'Learning step size', 'Number of hidden layers', 'Accuracy percentage'],
       correct: 0,
       explanationAr: 'الـ Epoch هو إتمام قراءة وتدريب جميع عينات مجموعة البيانات دفعة واحدة عبر الشبكة.'
+    },
+    {
+      qAr: 'ما دور دالة التكلفة أو الخسارة (Loss Function) في الشبكة العصبية؟',
+      qEn: 'What is the role of a Loss Function in neural network training?',
+      optionsAr: ['قياس الفارق العددي بين توقعات النموذج والقيم الحقيقية المستهدفة', 'مضاعفة عدد طبقات الشبكة تلقائياً', 'تلوين مخرجات البيانات', 'إيقاف بطاقة الرسوميات عن العمل'],
+      optionsEn: ['Quantifies the numerical divergence between predictions and ground-truth', 'Doubles layers automatically', 'Colors output plots', 'Turns off the GPU'],
+      correct: 0,
+      explanationAr: 'دالة الخسارة تعطي قيمة عددية لمقدار خطأ النموذج، والتي يُحسب تدرجها لتعديل الأوزان.'
+    },
+    {
+      qAr: 'ما الذي يفعله المحسن (Optimizer) مثل Adam أو SGD أثناء التدريب؟',
+      qEn: 'What is the responsibility of an Optimizer such as Adam or SGD?',
+      optionsAr: ['تحديث قيم الأوزان والأميال بخطوات محسوبة في اتجاه تقليل دالة الخسارة', 'كتابة التقارير للمستخدم', 'تغيير لغة نظام التشغيل', 'حذف البيانات القديمة من القرص'],
+      optionsEn: ['Adjusts weight and bias parameters along negative gradients to minimize loss', 'Writes user reports', 'Changes OS language', 'Deletes disk files'],
+      correct: 0,
+      explanationAr: 'خوارزميات التحسين تحدد مقدار واتجاه تعديل كل معامل بناءً على التدرجات المحسوبة.'
     }
   ],
   matchPairs: [
+    // Round 1
     { id: '1', term: 'Backpropagation', defAr: 'تعديل الأوزان بناءً على مشتقة الخطأ المحسوبة بقاعدة السلسلة', defEn: 'Updates weights using error gradients via chain rule' },
     { id: '2', term: 'Hidden Layer', defAr: 'استخلاص الملامح والأنماط المعقدة غير الخطية بين الطبقات', defEn: 'Extracts non-linear feature representations' },
     { id: '3', term: 'ReLU Function', defAr: 'دالة تنشيط تحول القيم السالبة إلى 0 وتمرر الموجبة', defEn: 'Activation function clipping negative inputs to zero' },
     { id: '4', term: 'Epochs Count', defAr: 'عدد دورات المرور الكاملة على مجموعة بيانات التدريب', defEn: 'Total full passes over the entire training dataset' },
+    // Round 2
+    { id: '5', term: 'Learning Rate', defAr: 'حجم الخطوة الرياضية التي يقطعها المحسن لتعديل الأوزان', defEn: 'Step size taken by optimizer towards minimum loss' },
+    { id: '6', term: 'Batch Size', defAr: 'عدد العينات المدخلة للشبكة في كل خطوة تحديث للأوزان', defEn: 'Number of training samples propagated per gradient step' },
+    { id: '7', term: 'Adam Optimizer', defAr: 'خوارزمية تدرج تكيفية تجمع بين عزم الحركة ومعدل التعلم المتغير', defEn: 'Adaptive moment estimation combining momentum & scaling' },
+    { id: '8', term: 'Dropout Layer', defAr: 'إسقاط عشوائي لوحدات عصبية أثناء التدريب للحد من فرط التخصيص', defEn: 'Regularization randomly deactivating units to stop co-adaptation' },
   ],
   trueFalseStatements: [
     { statementAr: 'تستعمل خوارزمية Backpropagation مشتقة الخطأ لحساب مقدار تعديل كل وزن في الشبكة.', statementEn: 'Backpropagation uses error gradients to calculate weight adjustment increments.', isTrue: true, explanationAr: 'صحيح! التمرير الخلفي يحسب ميل دالة الخسارة بالنسبة لكل وزن.' },
@@ -696,11 +1035,29 @@ const neuralNetsData: WordwallTopicGameData = {
     { statementAr: 'يساعد معدل التعلم (Learning Rate) الصغير جداً على منع تذبذب دالة الخسارة لكنه قد يبطئ التقارب.', statementEn: 'A very small learning rate prevents loss oscillations but can slow convergence.', isTrue: true, explanationAr: 'صحيح! معدل التعلم الصغير يجعل الخطوات دقيقة لكنها تستغرق وقتاً أطول.' }
   ],
   anagramTerm: 'BACKPROP',
+  anagramTerms: ['BACKPROP', 'NEURON', 'GRADIENT', 'ACTIVATION', 'EPOCHS'],
   missingWordSentence: {
     sentenceAr: 'تقوم دالة التنشيط __________ بتحويل جميع المدخلات السالبة إلى صفر وتمرير الموجبة.',
     wordOptionsAr: ['ReLU', 'Sigmoid', 'Softmax', 'Tanh'],
     correctWord: 'ReLU'
   },
+  missingWordSentences: [
+    {
+      sentenceAr: 'تقوم دالة التنشيط __________ بتحويل جميع المدخلات السالبة إلى صفر وتمرير الموجبة.',
+      wordOptionsAr: ['ReLU', 'Sigmoid', 'Softmax', 'Tanh'],
+      correctWord: 'ReLU'
+    },
+    {
+      sentenceAr: 'تُحسب مشتقات دالة الخسارة بالنسبة للأوزان عبر خوارزمية __________.',
+      wordOptionsAr: ['Backpropagation', 'Max Pooling', 'Tokenization', 'Stagnation'],
+      correctWord: 'Backpropagation'
+    },
+    {
+      sentenceAr: 'يُمثل الـ __________ حجم الخطوة الرياضية التي يخطوها المحسن لتحديث الأوزان.',
+      wordOptionsAr: ['Learning Rate', 'Kernel Size', 'Embedding Dimension', 'Filter Count'],
+      correctWord: 'Learning Rate'
+    }
+  ],
   groupSortData: {
     cat1Ar: '📈 دوال تنشيط غير خطية (Activations)',
     cat1En: 'Activation Functions',
@@ -734,14 +1091,16 @@ function generateDynamicGameData(topic: CourseTopic): WordwallTopicGameData {
   const title = topic.titleAr || topic.titleEn || 'المحتوى التعليمي';
   const desc = topic.descriptionAr || topic.descriptionEn || 'المفاهيم المتقدمة في الوحدة';
   
-  // Extract terms or derive meaningful defaults
   const words = `${title} ${desc}`.replace(/[^\w\s\u0600-\u06FF]/g, '').split(/\s+/).filter(w => w.length > 3);
   const keyword1 = words[0] || 'الخوارزمية';
   const keyword2 = words[1] || 'النموذج';
   const keyword3 = words[2] || 'البيانات';
   const keyword4 = words[3] || 'التقييم';
+  const keyword5 = words[4] || 'التنفيذ';
+  const keyword6 = words[5] || 'الأداء';
+  const keyword7 = words[6] || 'التحسين';
+  const keyword8 = words[7] || 'النتائج';
 
-  // Determine a safe uppercase English anagram word (default: KNOWLEDGE or 6-8 chars)
   const enWords = (topic.titleEn || 'STUDY CONCEPT').toUpperCase().replace(/[^A-Z]/g, '');
   const anagramCandidate = enWords.length >= 4 && enWords.length <= 10 ? enWords.slice(0, 8) : 'ANALYSIS';
 
@@ -805,26 +1164,50 @@ function generateDynamicGameData(topic: CourseTopic): WordwallTopicGameData {
         qAr: `ما الأثر الإيجابي لتطبيق هذه الوحدة على أداء النظام البرمجي؟`,
         qEn: `What is the positive impact of this module on software performance?`,
         optionsAr: [
-          'رفع الكفاءة التشغيلية وتقليل زمن المعالجة واستهلاك الموارد',
+          `رفع الكفاءة التشغيلية لـ ${keyword5} وتقليل زمن المعالجة واستهلاك الموارد`,
           'إبطاء سرعة الاستجابة بأضعاف مضاعفة',
           'مضاعفة استهلاك الذاكرة بدون فائدة',
           'توليد أخطاء عشوائية غير مفسرة'
         ],
         optionsEn: [
-          'Boosting operational throughput while minimizing latency and resource waste',
+          `Boosting operational throughput for ${keyword5} while minimizing latency and resource waste`,
           'Drastically slowing system response times',
           'Doubling memory consumption needlessly',
           'Generating unexplained random errors'
         ],
         correct: 0,
         explanationAr: 'التطبيق الأمثل للمفاهيم يرفع كفاءة المعالجة ويضمن استقرار الموارد البرمجية.'
+      },
+      {
+        qAr: `ما الدور المحوري لـ "${keyword6}" في نجاح تطبيق هذا الموضوع؟`,
+        qEn: `What is the pivotal role of "${keyword6}" in successfully applying this topic?`,
+        optionsAr: [
+          `قياس مدى تحقيق الأهداف واستقرار المخرجات عبر ${keyword7}`,
+          'إلغاء الحاجة لتدريب المستخدمين',
+          'زيادة التعقيد بدون مبرر',
+          'التوقف عند أول مرحلة'
+        ],
+        optionsEn: [
+          `Measuring objective attainment and output stability via ${keyword7}`,
+          'Eliminating user training',
+          'Unjustified complexity surge',
+          'Halting at phase 1'
+        ],
+        correct: 0,
+        explanationAr: `مؤشرات ${keyword6} تضمن قياس التقدم والتحسين المستمر.`
       }
     ],
     matchPairs: [
+      // Round 1
       { id: '1', term: keyword1, defAr: `المفهوم المحوري في دراسة "${title}"`, defEn: `Core concept in "${topic.titleEn || title}"` },
       { id: '2', term: keyword2, defAr: `الركيزة التطبيقية لمعالجة مهام هذه الوحدة`, defEn: `Applied pillar for managing this module tasks` },
       { id: '3', term: keyword3, defAr: `المدخلات الأساسية المستهدفة بالتحليل والتحسين`, defEn: `Primary target inputs analyzed and enhanced` },
-      { id: '4', term: keyword4, defAr: `معيار القياس والتحقق من جودة النتائج النهائية`, defEn: `Benchmark standard verifying output quality` }
+      { id: '4', term: keyword4, defAr: `معيار القياس والتحقق من جودة النتائج النهائية`, defEn: `Benchmark standard verifying output quality` },
+      // Round 2
+      { id: '5', term: keyword5, defAr: `مرحلة التنفيذ الإجرائي في بيئة العمل`, defEn: `Operational execution workflow` },
+      { id: '6', term: keyword6, defAr: `مؤشرات الأداء والكفاءة التشغيلية`, defEn: `Performance and throughput metrics` },
+      { id: '7', term: keyword7, defAr: `منهجية التحسين المستمر وضبط المعايير`, defEn: `Continuous optimization methodology` },
+      { id: '8', term: keyword8, defAr: `المخرجات النهائية الموثقة المعتمدة`, defEn: `Verified final project outputs` },
     ],
     trueFalseStatements: [
       {
@@ -847,11 +1230,24 @@ function generateDynamicGameData(topic: CourseTopic): WordwallTopicGameData {
       }
     ],
     anagramTerm: anagramCandidate,
+    anagramTerms: [anagramCandidate, 'CONCEPT', 'PRACTICE', 'ANALYSIS', 'WORKFLOW'],
     missingWordSentence: {
       sentenceAr: `يُعد استيعاب مبادئ __________ حجر الزاوية في إتقان هذا الموضوع التعليمي بنجاح.`,
       wordOptionsAr: [keyword1, 'التخمين العشوائي', 'تجاهل الأخطاء', 'إيقاف النظام'],
       correctWord: keyword1
     },
+    missingWordSentences: [
+      {
+        sentenceAr: `يُعد استيعاب مبادئ __________ حجر الزاوية في إتقان هذا الموضوع التعليمي بنجاح.`,
+        wordOptionsAr: [keyword1, 'التخمين العشوائي', 'تجاهل الأخطاء', 'إيقاف النظام'],
+        correctWord: keyword1
+      },
+      {
+        sentenceAr: `تعتمد منهجية تحسين __________ على الفحص الدوري وتصحيح المسار الهندسي.`,
+        wordOptionsAr: [keyword2, 'إيقاف الخوادم', 'حذف البيانات', 'التراجع التام'],
+        correctWord: keyword2
+      }
+    ],
     groupSortData: {
       cat1Ar: `📘 الأسس النظرية والمفاهيمية (${keyword1})`,
       cat1En: 'Theoretical Principles',

@@ -36,6 +36,7 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
   const [score, setScore] = useState<number>(0);
   const [lives, setLives] = useState<number>(3);
   const [currentQIndex, setCurrentQIndex] = useState<number>(0);
+  const [tfIndex, setTfIndex] = useState<number>(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
   // 10-Question Non-Repeating Batch State
@@ -116,6 +117,7 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
     const batchRes = getUniqueBatchOfQuestions(activeTopic, seenQuestionIds, 10);
     setCurrentBatch(batchRes.questions);
     setCurrentQIndex(0);
+    setTfIndex(0);
     setSelectedOption(null);
     setShowMilestoneDialog(false);
   }, [activeTopicId]);
@@ -129,6 +131,7 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
     setScore(0);
     setLives(3);
     setCurrentQIndex(0);
+    setTfIndex(0);
     setSelectedOption(null);
     setMatchedPairs([]);
     setSelectedTerm(null);
@@ -243,6 +246,7 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
                     setCurrentBatch(nextBatchRes.questions);
                     setBatchCount(prev => prev + 1);
                     setCurrentQIndex(0);
+    setTfIndex(0);
                     setSelectedOption(null);
                     setShowMilestoneDialog(false);
                     setFeedbackMsg({
@@ -290,6 +294,31 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
                 <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-500/20 text-sky-300 font-bold border border-purple-500/40">
                   🎯 {isAr ? `الموضوع النشط: ${activeTopic.titleAr}` : `Active Topic: ${activeTopic.titleEn}`}
                 </span>
+                <button
+                  onClick={() => {
+                    const allBatchIds = activeQuizBatch.map(q => q.id);
+                    const updatedSeen = Array.from(new Set([...seenQuestionIds, ...allBatchIds]));
+                    setSeenQuestionIds(updatedSeen);
+                    const nextBatchRes = getUniqueBatchOfQuestions(activeTopic, updatedSeen, 10);
+                    setCurrentBatch(nextBatchRes.questions);
+                    setBatchCount(prev => prev + 1);
+                    setCurrentQIndex(0);
+                    setMoleQIndex(0);
+                    setAirplaneQIndex(0);
+                    setBalloonQIndex(0);
+                    setTfIndex(0);
+                    setSelectedOption(null);
+                    setFeedbackMsg({
+                      text: isAr ? '✨ تم استدعاء 10 أسئلة جديدة وحصرية غير مكررة بنجاح!' : 'Loaded 10 brand-new unique questions!',
+                      type: 'success'
+                    });
+                  }}
+                  title={isAr ? 'توليد 10 أسئلة جديدة فوراً من بنك الأسئلة' : 'Generate 10 new questions now'}
+                  className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold text-[10px] border border-cyan-500/40 flex items-center gap-1 transition"
+                >
+                  <span>🔄</span>
+                  <span>{isAr ? '10 أسئلة جديدة فوراً' : '10 New Questions'}</span>
+                </button>
               </div>
               <p className="text-xs text-slate-400">
                 {isAr ? 'تم ضبط محركات اللعب وإتاحة الإجابات الصحيحة والخاطئة مع حساب النقاط والقلوب والجولات المتتالية فورياً' : 'All Wordwall templates are fully tuned with score tracking, hearts system, and continuous rounds'}
@@ -643,56 +672,79 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
           )}
 
           {/* TEMPLATE 4: TRUE OR FALSE */}
-          {selectedTemplateId === 'true_false' && (
-            <div className="w-full h-full flex flex-col justify-between items-center text-center">
-              <div className="flex items-center justify-between w-full border-b border-slate-800 pb-2">
-                <span className="text-xs font-bold text-emerald-400">⚡ {isAr ? 'تقييم العبارات العلمية (صواب أم خطأ):' : 'Scientific Statements Evaluation:'}</span>
-                <span className="text-xs text-slate-400 font-bold">{currentQIndex + 1} / {currentData.trueFalseStatements.length}</span>
-              </div>
+          {selectedTemplateId === 'true_false' && (() => {
+            const stmts = currentData.trueFalseStatements;
+            const activeStmt = stmts[tfIndex % stmts.length] || stmts[0];
+            return (
+              <div className="w-full h-full flex flex-col justify-between items-center text-center" dir={isAr ? 'rtl' : 'ltr'}>
+                <div className="flex items-center justify-between w-full border-b border-slate-800 pb-2">
+                  <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                    <span>⚡</span>
+                    <span>{isAr ? 'تقييم العبارات العلمية (صواب أم خطأ):' : 'Scientific Statements Evaluation:'}</span>
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-emerald-400 font-mono text-xs">{isAr ? `النقاط: ${score}` : `Score: ${score}`}</span>
+                    <span className="text-xs text-sky-300 font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                      {tfIndex + 1} / {stmts.length}
+                    </span>
+                  </div>
+                </div>
 
-              <div className="my-auto space-y-6 max-w-lg w-full">
-                <p className="text-sm font-extrabold text-white bg-slate-900 p-5 rounded-2xl border border-slate-800 leading-relaxed shadow-lg">
-                  "{isAr ? currentData.trueFalseStatements[currentQIndex].statementAr : currentData.trueFalseStatements[currentQIndex].statementEn}"
-                </p>
-
-                <div className="flex justify-center gap-4">
-                  <button 
-                    onClick={() => {
-                      const stmt = currentData.trueFalseStatements[currentQIndex];
-                      if (stmt.isTrue === true) {
-                        setScore(prev => prev + 15);
-                        setFeedbackMsg({ text: isAr ? `صحيح! 🎯 ${stmt.explanationAr}` : 'Correct!', type: 'success' });
-                        handleClaimXP();
-                      } else {
-                        setFeedbackMsg({ text: isAr ? `إجابة خاطئة ❌! ${stmt.explanationAr}` : 'Incorrect!', type: 'error' });
-                      }
-                      setCurrentQIndex((prev) => (prev + 1) % currentData.trueFalseStatements.length);
-                    }} 
-                    className="px-6 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-400 text-emerald-300 font-extrabold text-sm hover:scale-105 transition"
+                <div className="my-auto space-y-6 max-w-xl w-full">
+                  <p 
+                    dir={isAr ? 'rtl' : 'ltr'}
+                    className="text-xs sm:text-sm font-extrabold text-white bg-slate-900 p-5 rounded-2xl border border-slate-800 leading-relaxed shadow-lg text-right"
                   >
-                    ✅ {isAr ? 'صواب (True)' : 'True'}
-                  </button>
+                    "{isAr ? activeStmt.statementAr : activeStmt.statementEn}"
+                  </p>
 
-                  <button 
-                    onClick={() => {
-                      const stmt = currentData.trueFalseStatements[currentQIndex];
-                      if (stmt.isTrue === false) {
-                        setScore(prev => prev + 15);
-                        setFeedbackMsg({ text: isAr ? `صحيح! 🎯 ${stmt.explanationAr}` : 'Correct!', type: 'success' });
-                        handleClaimXP();
-                      } else {
-                        setFeedbackMsg({ text: isAr ? `إجابة خاطئة ❌! ${stmt.explanationAr}` : 'Incorrect!', type: 'error' });
-                      }
-                      setCurrentQIndex((prev) => (prev + 1) % currentData.trueFalseStatements.length);
-                    }} 
-                    className="px-6 py-3 rounded-2xl bg-rose-500/20 border border-rose-400 text-rose-300 font-extrabold text-sm hover:scale-105 transition"
-                  >
-                    ❌ {isAr ? 'خطأ (False)' : 'False'}
-                  </button>
+                  <div className="flex justify-center gap-4">
+                    <button 
+                      onClick={() => {
+                        if (activeStmt.isTrue === true) {
+                          setScore(prev => prev + 15);
+                          setFeedbackMsg({ text: isAr ? `صحيح! 🎯 ${activeStmt.explanationAr}` : 'Correct!', type: 'success' });
+                          handleClaimXP();
+                        } else {
+                          setLives(prev => Math.max(0, prev - 1));
+                          setFeedbackMsg({ text: isAr ? `إجابة خاطئة ❌! ${activeStmt.explanationAr}` : 'Incorrect!', type: 'error' });
+                        }
+                        if (tfIndex + 1 >= stmts.length || (tfIndex + 1) % 10 === 0) {
+                          setShowMilestoneDialog(true);
+                        } else {
+                          setTfIndex(prev => prev + 1);
+                        }
+                      }} 
+                      className="px-6 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-400 text-emerald-300 font-extrabold text-sm hover:scale-105 transition shadow-lg"
+                    >
+                      ✅ {isAr ? 'صواب (True)' : 'True'}
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        if (activeStmt.isTrue === false) {
+                          setScore(prev => prev + 15);
+                          setFeedbackMsg({ text: isAr ? `صحيح! 🎯 ${activeStmt.explanationAr}` : 'Correct!', type: 'success' });
+                          handleClaimXP();
+                        } else {
+                          setLives(prev => Math.max(0, prev - 1));
+                          setFeedbackMsg({ text: isAr ? `إجابة خاطئة ❌! ${activeStmt.explanationAr}` : 'Incorrect!', type: 'error' });
+                        }
+                        if (tfIndex + 1 >= stmts.length || (tfIndex + 1) % 10 === 0) {
+                          setShowMilestoneDialog(true);
+                        } else {
+                          setTfIndex(prev => prev + 1);
+                        }
+                      }} 
+                      className="px-6 py-3 rounded-2xl bg-rose-500/20 border border-rose-400 text-rose-300 font-extrabold text-sm hover:scale-105 transition shadow-lg"
+                    >
+                      ❌ {isAr ? 'خطأ (False)' : 'False'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* TEMPLATE 5: WHACK A MOLE */}
           {selectedTemplateId === 'whack_a_mole' && (() => {
@@ -723,8 +775,12 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
                             setFeedbackMsg({ text: isAr ? 'ضربة صائبة! تم اصطياد الإجابة الصحيحة 🔨🎯' : 'Correct Whack!', type: 'success' });
                             handleClaimXP();
                             setTimeout(() => {
-                              setMoleQIndex(prev => (prev + 1) % activeQuizBatch.length);
-                            }, 1000);
+                              if (moleQIndex + 1 >= activeQuizBatch.length) {
+                                setShowMilestoneDialog(true);
+                              } else {
+                                setMoleQIndex(prev => prev + 1);
+                              }
+                            }, 800);
                           } else {
                             setLives(prev => Math.max(0, prev - 1));
                             setFeedbackMsg({ text: isAr ? 'اصطياد خاطئ! خسرت محاولة ❌' : 'Wrong Mole!', type: 'error' });
@@ -864,7 +920,7 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
 
           {/* TEMPLATE 8: AIRPLANE FLIGHT */}
           {selectedTemplateId === 'airplane_flight' && (() => {
-            const activeQ = currentData.quizQuestions[airplaneQIndex % activeQuizBatch.length] || currentData.quizQuestions[0];
+            const activeQ = activeQuizBatch[airplaneQIndex % activeQuizBatch.length] || activeQuizBatch[0];
             return (
               <div className="w-full h-full flex flex-col justify-between items-center text-center">
                 <div className="border-b border-slate-800 pb-2 text-xs font-bold text-sky-400 w-full flex items-center justify-between">
@@ -885,8 +941,12 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
                             setFeedbackMsg({ text: isAr ? 'طيران ناجح عبر السحابة الصحيحة! ✈️✨' : 'Successful Flight!', type: 'success' });
                             handleClaimXP();
                             setTimeout(() => {
-                              setAirplaneQIndex(prev => (prev + 1) % activeQuizBatch.length);
-                            }, 1000);
+                              if (airplaneQIndex + 1 >= activeQuizBatch.length) {
+                                setShowMilestoneDialog(true);
+                              } else {
+                                setAirplaneQIndex(prev => prev + 1);
+                              }
+                            }, 800);
                           } else {
                             setFeedbackMsg({ text: isAr ? 'اصطدام بسحابة خاطئة 💥! حاول مجدداً' : 'Cloud Collision!', type: 'error' });
                           }
@@ -900,10 +960,16 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
 
                   <div className="flex justify-center pt-1">
                     <button
-                      onClick={() => setAirplaneQIndex(prev => (prev + 1) % activeQuizBatch.length)}
+                      onClick={() => {
+                        if (airplaneQIndex + 1 >= activeQuizBatch.length) {
+                          setShowMilestoneDialog(true);
+                        } else {
+                          setAirplaneQIndex(prev => prev + 1);
+                        }
+                      }}
                       className="px-4 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-300 hover:text-white flex items-center gap-1.5"
                     >
-                      <span>{isAr ? 'السؤال التالي' : 'Next Question'}</span>
+                      <span>{isAr ? (airplaneQIndex + 1 >= activeQuizBatch.length ? '🏆 إتمام الـ 10 أسئلة' : 'السؤال التالي') : (airplaneQIndex + 1 >= activeQuizBatch.length ? '🏆 Milestone' : 'Next Question')}</span>
                       <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
                     </button>
                   </div>
@@ -1089,7 +1155,7 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
 
           {/* TEMPLATE 11: BALLOON POP (فرقعة البالونات) */}
           {selectedTemplateId === 'balloon_pop' && (() => {
-            const activeQ = currentData.quizQuestions[balloonQIndex % activeQuizBatch.length] || currentData.quizQuestions[0];
+            const activeQ = activeQuizBatch[balloonQIndex % activeQuizBatch.length] || activeQuizBatch[0];
             return (
               <div className="w-full h-full flex flex-col justify-between items-center text-center">
                 <div className="flex items-center justify-between w-full border-b border-slate-800 pb-2">
@@ -1121,9 +1187,13 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
                               setFeedbackMsg({ text: isAr ? 'فرقعة صائبة! تم تدمير البالون الصحيح 🎈💥 (+25 نقطة)' : 'Correct Balloon Popped!', type: 'success' });
                               handleClaimXP();
                               setTimeout(() => {
-                                setBalloonQIndex(prev => (prev + 1) % activeQuizBatch.length);
                                 setPoppedBalloons([]);
-                              }, 1000);
+                                if (balloonQIndex + 1 >= activeQuizBatch.length) {
+                                  setShowMilestoneDialog(true);
+                                } else {
+                                  setBalloonQIndex(prev => prev + 1);
+                                }
+                              }, 800);
                             } else {
                               setLives(prev => Math.max(0, prev - 1));
                               setFeedbackMsg({ text: isAr ? 'فرقعة خاطئة! خسرت محاولة ❌' : 'Wrong Balloon Popped!', type: 'error' });
@@ -1143,12 +1213,16 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
                   <div className="flex justify-center pt-1">
                     <button
                       onClick={() => {
-                        setBalloonQIndex(prev => (prev + 1) % activeQuizBatch.length);
                         setPoppedBalloons([]);
+                        if (balloonQIndex + 1 >= activeQuizBatch.length) {
+                          setShowMilestoneDialog(true);
+                        } else {
+                          setBalloonQIndex(prev => prev + 1);
+                        }
                       }}
                       className="px-4 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-300 hover:text-white flex items-center gap-1.5"
                     >
-                      <span>{isAr ? 'السؤال التالي' : 'Next Question'}</span>
+                      <span>{isAr ? (balloonQIndex + 1 >= activeQuizBatch.length ? '🏆 إتمام الـ 10 أسئلة' : 'السؤال التالي') : (balloonQIndex + 1 >= activeQuizBatch.length ? '🏆 Milestone' : 'Next Question')}</span>
                       <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
                     </button>
                   </div>

@@ -1,47 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useStore } from '../../store/useStore';
-import { getTopicType } from '../../services/topicContentService';
 import { 
   Gamepad2, X, Sparkles, Trophy, CheckCircle2, Link, Disc, 
   AlertCircle, Heart, ArrowUp, ArrowDown
 } from 'lucide-react';
+import {
+  TOP_15_WORDWALL_TEMPLATES,
+  getWordwallGameData,
+  type WordwallGameTemplate
+} from '../../services/wordwallDataService';
+
+export type { WordwallGameTemplate };
 
 interface WordwallModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export interface WordwallGameTemplate {
-  id: string;
-  nameAr: string;
-  nameEn: string;
-  icon: string;
-  badgeAr: string;
-  descriptionAr: string;
-}
-
-export const TOP_15_WORDWALL_TEMPLATES: WordwallGameTemplate[] = [
-  { id: 'gameshow_quiz', nameAr: 'المسابقة التفاعلية', nameEn: 'Quiz Arena', icon: '🎯', badgeAr: 'أكثر شعبية', descriptionAr: 'اختبار خيارات متعددة مع عداد نقاط ودعم المساعدة' },
-  { id: 'match_up', nameAr: 'التوصيل والمطابقة', nameEn: 'Match-up', icon: '🎮', badgeAr: 'توصيل', descriptionAr: 'ربط المصطلحات العلمية بالتعاريف الصحيحة' },
-  { id: 'spin_wheel', nameAr: 'عجلة الحظ والتحدي', nameEn: 'Spin the Wheel', icon: '🎡', badgeAr: 'تحدي', descriptionAr: 'عجلة دوارة تختار أسئلة ومكافآت عشوائية' },
-  { id: 'true_false', nameAr: 'صواب أم خطأ', nameEn: 'True or False', icon: '⚡', badgeAr: 'سريع', descriptionAr: 'تقييم صحة العبارات العلمية مع تصحيح الأخطاء' },
-  { id: 'whack_a_mole', nameAr: 'اصطياد الإجابات', nameEn: 'Whack-a-Mole', icon: '🔨', badgeAr: 'سرعة', descriptionAr: 'اصطياد القوارض التي تحمل الإجابة الصحيحة وتفادي الخاطئة' },
-  { id: 'anagram', nameAr: 'ترتيب الحروف', nameEn: 'Anagram / Unjumble', icon: '🔤', badgeAr: 'ترتيب', descriptionAr: 'إعادة ترتيب الحروف المتناثرة لتشكيل المصطلح الصحيح' },
-  { id: 'missing_word', nameAr: 'الكلمة المفقودة', nameEn: 'Missing Word', icon: '📝', badgeAr: 'إكمال', descriptionAr: 'اختيار الكلمة المناسبة لإكمال فراغ الجملة' },
-  { id: 'airplane_flight', nameAr: 'طائرة المفاهيم', nameEn: 'Airplane Flight', icon: '✈️', badgeAr: 'مغامرة', descriptionAr: 'توجيه الطائرة نحو السحابة ذات الإجابة الصحيحة' },
-  { id: 'flashcards', nameAr: 'بطاقات المراجعة', nameEn: 'Flashcards', icon: '🎴', badgeAr: 'مراجعة', descriptionAr: 'بطاقات تكرار متباعد لمعاينة واختبار حفظك للمفاهيم' },
-  { id: 'group_sort', nameAr: 'تصنيف المجموعات', nameEn: 'Group Sort', icon: '⚖️', badgeAr: 'تصنيف', descriptionAr: 'فرز المفاهيم والروابط إلى صناديقها الصحيحة' },
-  { id: 'balloon_pop', nameAr: 'فرقعة البالونات', nameEn: 'Balloon Pop', icon: '🎈', badgeAr: 'سرعة', descriptionAr: 'فرقعة البالون الذي يحوي المصطلح المطابق' },
-  { id: 'rank_order', nameAr: 'التدرج الترتيبي', nameEn: 'Rank Order', icon: '📊', badgeAr: 'تدرج', descriptionAr: 'ترتيب خطوات تنفيذ الخوارزمية بالتسلسل الصحيح' },
-  { id: 'maze_chase', nameAr: 'مطاردة المتاهة', nameEn: 'Maze Chase', icon: '🕳️', badgeAr: 'متاهة', descriptionAr: 'توجيه الشخصية عبر المتاهة نحو الهدف الصحيح' },
-  { id: 'custom_embed', nameAr: 'تضمين رابط Wordwall', nameEn: 'Custom Embed Link', icon: '🌐', badgeAr: 'رابط', descriptionAr: 'تضمين وتشغيل أي نشاط خارجي من موقع Wordwall' },
-];
-
 export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose }) => {
   const { activeTopicId, topics, addXP, language } = useStore();
   const isAr = language === 'ar';
   
   const activeTopic = topics.find(t => t.id === activeTopicId) || topics[0];
+  const currentData = useMemo(() => getWordwallGameData(activeTopic), [activeTopic]);
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('gameshow_quiz');
   const [gameUrl, setGameUrl] = useState<string | null>(null);
@@ -82,282 +63,6 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
   // Maze Chase State
   const [mazeSelectedDoor, setMazeSelectedDoor] = useState<number | null>(null);
 
-  // Comprehensive Topic Data Engine for all templates
-  const topicGameData: Record<string, {
-    quizQuestions: { qAr: string; qEn: string; optionsAr: string[]; optionsEn: string[]; correct: number; explanationAr: string }[];
-    matchPairs: { id: string; term: string; defAr: string; defEn: string }[];
-    trueFalseStatements: { statementAr: string; statementEn: string; isTrue: boolean; explanationAr: string }[];
-    anagramTerm: string;
-    missingWordSentence: { sentenceAr: string; wordOptionsAr: string[]; correctWord: string };
-    groupSortData: { cat1Ar: string; cat1En: string; cat2Ar: string; cat2En: string; items: { textAr: string; textEn: string; cat: 1 | 2 }[] };
-    rankSteps: { id: number; textAr: string; textEn: string; correctOrder: number }[];
-    mazeDoors: { label: string; optionAr: string; optionEn: string; isCorrect: boolean }[];
-  }> = {
-    neural_nets: {
-      quizQuestions: [
-        { 
-          qAr: 'ما الخوارزمية المسؤولة عن تعديل أوزان الروابط بعكس اتجاه الإشارة بناءً على دالة الخطأ؟', 
-          qEn: 'Which algorithm updates neural connection weights in reverse direction?', 
-          optionsAr: ['التمرير الخلفي (Backpropagation)', 'التجمع المكاني (Max Pooling)', 'التنعيم المنهجي (Smoothing)', 'الترميز اللغوي (Tokenization)'], 
-          optionsEn: ['Backpropagation', 'Max Pooling', 'Smoothing', 'Tokenization'], 
-          correct: 0,
-          explanationAr: 'التمرير الخلفي (Backpropagation) يحسب المشتقة الجزئية للخطأ ويقوم بتحديث الأوزان.'
-        },
-        { 
-          qAr: 'ماذا تفعل دالة التنشيط ReLU عندما تنقل إشارة مدخلات قيمتها سالبة؟', 
-          qEn: 'What does ReLU activation do when receiving negative input values?', 
-          optionsAr: ['تحول القيمة السالبة لـ 0 مباشرة', 'تضاعف القيمة السالبة', 'تقسم القيمة على 2', 'تزيد القيمة لـ +100'], 
-          optionsEn: ['Converts negative value to 0', 'Doubles negative value', 'Divides value by 2', 'Increases to +100'], 
-          correct: 0,
-          explanationAr: 'دالة ReLU تلغي القيم السالبة وتجعلها 0، وتمرر القيم الموجبة كما هي.'
-        },
-        { 
-          qAr: 'ما هي الطبقة المحصورة بين المدخلات والمخرجات والمسؤولة عن استخلاص الأنماط؟', 
-          qEn: 'Which layer situated between inputs and outputs extracts non-linear patterns?', 
-          optionsAr: ['الطبقة الخفية (Hidden Layer)', 'طبقة المدخلات (Input Layer)', 'طبقة التجميد (Freeze Layer)', 'المخرجات الصريحة (Output)'], 
-          optionsEn: ['Hidden Layer', 'Input Layer', 'Freeze Layer', 'Output Layer'], 
-          correct: 0,
-          explanationAr: 'الطبقة الخفية (Hidden Layer) تتولى معالجة الملامح واستخلاص التمثيل المعقد.'
-        },
-        { 
-          qAr: 'ماذا يمثل مصطلح الـ Epoch في تدريب الشبكة العصبية؟', 
-          qEn: 'What does an Epoch represent during neural network training?', 
-          optionsAr: ['دورة تدريب كاملة على كل مجموعة البيانات', 'حجم خطوة التعلم', 'عدد طبقات الشبكة', 'نسبة دقة النموذج'], 
-          optionsEn: ['Full training pass over entire dataset', 'Learning step size', 'Layer count', 'Accuracy ratio'], 
-          correct: 0,
-          explanationAr: 'الـ Epoch هو قراءة وتدريب كامل البيانات دفعة واحدة خلال الدورة.'
-        }
-      ],
-      matchPairs: [
-        { id: '1', term: 'Backpropagation', defAr: 'تعديل الأوزان بناءً على مشتقة الخطأ المحسوبة', defEn: 'Updates weights using error gradients' },
-        { id: '2', term: 'Hidden Layer', defAr: 'استخلاص الملامح والأنماط المعقدة بين الطبقات', defEn: 'Extracts non-linear feature representations' },
-        { id: '3', term: 'ReLU Function', defAr: 'دالة تنشيط تحول القيم السالبة إلى 0', defEn: 'Activation function setting negatives to 0' },
-        { id: '4', term: 'Epochs Count', defAr: 'عدد دورات تدريب البيانات الكاملة في الشبكة', defEn: 'Total full training dataset passes' },
-      ],
-      trueFalseStatements: [
-        { statementAr: 'تستعمل خوارزمية Backpropagation مشتقة الخطأ لتعديل الأوزان.', statementEn: 'Backpropagation uses error gradients to update weights.', isTrue: true, explanationAr: 'صحيح! التمرير الخلفي يحسب خطأ التوقع ويعدل الأوزان.' },
-        { statementAr: 'تقوم دالة التنشيط ReLU بتحويل الأرقام الموجبة إلى صفر.', statementEn: 'ReLU converts positive numbers to zero.', isTrue: false, explanationAr: 'خطأ! ReLU تحول الأرقام السالبة فقط إلى صفر وتترك الموجبة كما هي.' },
-        { statementAr: 'طبقة المدخلات Input Layer هي المسؤولة عن استخلاص الملامح المعقدة.', statementEn: 'Input layer performs complex feature extraction.', isTrue: false, explanationAr: 'خطأ! الطبقة الخفية Hidden Layer هي المسؤولة عن معالجة الملامح المعقدة.' },
-        { statementAr: 'كلما قل معدل التعلم Learning Rate بشكل متوازن، زاد استقرار التدريب.', statementEn: 'Balanced lower learning rate enhances training stability.', isTrue: true, explanationAr: 'صحيح! معدل التعلم المنخفض يمنع اهتزاز التدرج.' }
-      ],
-      anagramTerm: 'BACKPROP',
-      missingWordSentence: {
-        sentenceAr: 'تستعمل خوارزمية __________ لتعديل أوزان الروابط بعد حساب دالة الخطأ.',
-        wordOptionsAr: ['Backpropagation', 'Max Pooling', 'Softmax', 'Tokenization'],
-        correctWord: 'Backpropagation'
-      },
-      groupSortData: {
-        cat1Ar: '🏛️ مكونات المعمارية',
-        cat1En: 'Architecture Components',
-        cat2Ar: '⚙️ دوال وخوارزميات',
-        cat2En: 'Functions & Algorithms',
-        items: [
-          { textAr: 'الطبقة الخفية (Hidden Layer)', textEn: 'Hidden Layer', cat: 1 },
-          { textAr: 'التمرير الخلفي (Backprop)', textEn: 'Backpropagation', cat: 2 },
-          { textAr: 'دالة ReLU', textEn: 'ReLU Activation', cat: 2 },
-          { textAr: 'خلايا المدخلات (Input Neurons)', textEn: 'Input Neurons', cat: 1 },
-          { textAr: 'الانحدار الخطي (Gradient Descent)', textEn: 'Gradient Descent', cat: 2 },
-          { textAr: 'طبقة المخرجات (Output Layer)', textEn: 'Output Layer', cat: 1 },
-        ]
-      },
-      rankSteps: [
-        { id: 1, textAr: '1️⃣ تغذية طبقة المدخلات بالبيانات', textEn: '1️⃣ Input Layer Data Feed', correctOrder: 1 },
-        { id: 2, textAr: '2️⃣ الحساب الأمامي في الطبقات الخفية', textEn: '2️⃣ Forward Pass Computation', correctOrder: 2 },
-        { id: 3, textAr: '3️⃣ قياس خطأ دالة الخسارة (Loss Function)', textEn: '3️⃣ Loss Function Calculation', correctOrder: 3 },
-        { id: 4, textAr: '4️⃣ التمرير الخلفي وتحديث أوزان الشبكة', textEn: '4️⃣ Backprop & Weight Update', correctOrder: 4 },
-      ],
-      mazeDoors: [
-        { label: 'الباب A', optionAr: 'Max Pooling (طريق مسدود 💀)', optionEn: 'Max Pooling', isCorrect: false },
-        { label: 'الباب B', optionAr: 'Backpropagation (المسار الآمن 🚪✨)', optionEn: 'Backpropagation', isCorrect: true },
-        { label: 'الباب C', optionAr: 'Tokenization (طريق مسدود 💀)', optionEn: 'Tokenization', isCorrect: false },
-        { label: 'الباب D', optionAr: 'Dropout Rate (طريق مسدود 💀)', optionEn: 'Dropout Rate', isCorrect: false },
-      ]
-    },
-    ai_fundamentals: {
-      quizQuestions: [
-        { qAr: 'أي نوع تعلم يعتمد على وجود إجابات وحقائق سابقة Labeled Data؟', qEn: 'Which learning type relies on labeled training data?', optionsAr: ['التعلم الخاضع للإشراف (Supervised)', 'التعلم غير الخاضع (Unsupervised)', 'التكتل (Clustering)', 'التعلم العشوائي'], optionsEn: ['Supervised Learning', 'Unsupervised', 'Clustering', 'Random'], correct: 0, explanationAr: 'التعلم الخاضع للإشراف يستخدم أمثلة معنونة بحقائق.' },
-        { qAr: 'ماذا تعني ظاهرة Overfitting في تعلم الآلة؟', qEn: 'What does Overfitting signify in Machine Learning?', optionsAr: ['حفظ نموذج التدريب وفشله في التعميم للبيانات الجديدة', 'دقة مثالية في كل الحالات', 'بطء تدريب الخادم', 'فقدان البيانات'], optionsEn: ['Model memorizes training data failing generalization', 'Perfect accuracy always', 'Slow server', 'Data loss'], correct: 0, explanationAr: 'Overfitting تعني حفظ النموذج لبيانات التدريب بدقة ولكن فشله عند اختيار بيانات جديدة.' }
-      ],
-      matchPairs: [
-        { id: '1', term: 'Supervised Learning', defAr: 'التعلم باستخدام بيانات معنونة بحقائق معروفة', defEn: 'Machine learning using labeled datasets' },
-        { id: '2', term: 'Overfitting', defAr: 'حفظ النموذج للبيانات دون القدرة على التعميم', defEn: 'Memorizing training data failing generalization' },
-        { id: '3', term: 'Generative AI', defAr: 'أنظمة ذكاء اصطناعي تُنتج محتوى جديد كلياً', defEn: 'AI systems generating brand new content' },
-        { id: '4', term: 'Accuracy Metric', defAr: 'مقياس نسبة التوقعات الصائبة للنموذج', defEn: 'Percentage of correct model predictions' },
-      ],
-      trueFalseStatements: [
-        { statementAr: 'يعتمد التعلم الخاضع للإشراف Supervised Learning على بيانات معنونة.', statementEn: 'Supervised learning relies on labeled data.', isTrue: true, explanationAr: 'صحيح! الخاضع للإشراف يعتمد على بيانات معنونة.' },
-        { statementAr: 'ظاهرة Overfitting تعني أن النموذج ممتاز وقادر على التعميم في أي بيئة.', statementEn: 'Overfitting means model generalizes perfectly.', isTrue: false, explanationAr: 'خطأ! Overfitting تعني حفظ بيانات التدريب وفشل التعميم على البيانات الجديدة.' }
-      ],
-      anagramTerm: 'OVERFIT',
-      missingWordSentence: {
-        sentenceAr: 'يحدث الـ __________ عندما يحفظ النموذج بيانات التدريب ولا يستطيع التعميم.',
-        wordOptionsAr: ['Overfitting', 'Underfitting', 'Pooling', 'Normalization'],
-        correctWord: 'Overfitting'
-      },
-      groupSortData: {
-        cat1Ar: '🏷️ تعلم خاضع للإشراف',
-        cat1En: 'Supervised Learning',
-        cat2Ar: '🔍 تعلم غير خاضع للإشراف',
-        cat2En: 'Unsupervised Learning',
-        items: [
-          { textAr: 'تصنيف الصور المعنونة (Labeled Image)', textEn: 'Labeled Classification', cat: 1 },
-          { textAr: 'تجميع العملاء (K-Means Clustering)', textEn: 'Customer Clustering', cat: 2 },
-          { textAr: 'التنبؤ بأسعار المنزل (Regression)', textEn: 'House Price Regression', cat: 1 },
-          { textAr: 'استكشاف الأنماط دون معلم (Pattern Discovery)', textEn: 'Pattern Discovery', cat: 2 }
-        ]
-      },
-      rankSteps: [
-        { id: 1, textAr: '1️⃣ جمع البيانات وتنظيف القيم المفقودة', textEn: '1️⃣ Data Collection & Cleaning', correctOrder: 1 },
-        { id: 2, textAr: '2️⃣ استخلاص الملامح والخصائص', textEn: '2️⃣ Feature Extraction', correctOrder: 2 },
-        { id: 3, textAr: '3️⃣ تدريب النموذج على البيانات', textEn: '3️⃣ Model Training', correctOrder: 3 },
-        { id: 4, textAr: '4️⃣ قياس الدقة والتعميم في الإنتاج', textEn: '4️⃣ Accuracy Evaluation', correctOrder: 4 },
-      ],
-      mazeDoors: [
-        { label: 'الباب A', optionAr: 'زيادة التعقيد وتجاهل الاختبار (طريق مسدود 💀)', optionEn: 'Increase Complexity', isCorrect: false },
-        { label: 'الباب B', optionAr: 'تقسيم البيانات وتبسيط النموذج (المسار الآمن 🚪✨)', optionEn: 'Regularization & Split', isCorrect: true },
-        { label: 'الباب C', optionAr: 'حذف بيانات التقييم (طريق مسدود 💀)', optionEn: 'Delete Validation Data', isCorrect: false },
-        { label: 'الباب D', optionAr: 'مضاعفة دورات الحفظ (طريق مسدود 💀)', optionEn: 'Double Epoch Memorization', isCorrect: false },
-      ]
-    },
-    computer_vision: {
-      quizQuestions: [
-        { qAr: 'ما هي وظيفة طبقة Max Pooling في الشبكات التلافيفية CNNs؟', qEn: 'What is the role of Max Pooling in CNNs?', optionsAr: ['تقليل الأبعاد الفراغية وتكثيف الملامح البارزة', 'تكبير حجم الصورة', 'تلوين الحواف', 'حذف البكسلات الموجبة'], optionsEn: ['Downsample spatial dimensions and condense features', 'Enlarge image', 'Color edges', 'Delete positive pixels'], correct: 0, explanationAr: 'Max Pooling تقص الأبعاد الحجمية وتلخص الملامح الأقوى.' }
-      ],
-      matchPairs: [
-        { id: '1', term: 'Convolution Filter', defAr: 'فلتر مصفوفة لاستخلاص الحواف والملامح البصرية', defEn: 'Matrix kernel extracting visual edges' },
-        { id: '2', term: 'Max Pooling', defAr: 'تقليل الحجم الفراغي وتكثيف الملامح الأهم', defEn: 'Downsampling spatial dimensions' },
-        { id: '3', term: 'Feature Map', defAr: 'خريطة الملامح الناتجة عن تطبيق الفلاتر', defEn: 'Feature map generated by convolution' },
-        { id: '4', term: 'Bounding Box', defAr: 'مربع تحديد كائنات الصور في الكشف المكاني', defEn: 'Bounding box enclosing detected objects' },
-      ],
-      trueFalseStatements: [
-        { statementAr: 'تُستعمل فلاتر التلافيف Convolution Filters لاستخلاص الحواف والأشكال من الصور.', statementEn: 'Convolution filters extract edges and shapes from images.', isTrue: true, explanationAr: 'صحيح! الفلاتر تستخلص ملامح الحواف والزوايا.' },
-        { statementAr: 'عملية Max Pooling تُضاعف أبعاد الصورة مرتين.', statementEn: 'Max Pooling doubles image dimensions.', isTrue: false, explanationAr: 'خطأ! Max Pooling تقسم وتخفض أبعاد الصورة وتكثف الملامح.' }
-      ],
-      anagramTerm: 'POOLING',
-      missingWordSentence: {
-        sentenceAr: 'تستخدم خوارزمية المكاني __________ لتكثيف ملامح الصور وتقليل الأبعاد.',
-        wordOptionsAr: ['Max Pooling', 'Softmax', 'Dropout', 'Backpropagation'],
-        correctWord: 'Max Pooling'
-      },
-      groupSortData: {
-        cat1Ar: '🧊 عمليات تجميع وتقليل أبعاد',
-        cat1En: 'Pooling Operations',
-        cat2Ar: '🖼️ فلاتر استخلاص ملامح',
-        cat2En: 'Feature Filters',
-        items: [
-          { textAr: 'Max Pooling (أقصى ميزة)', textEn: 'Max Pooling', cat: 1 },
-          { textAr: 'فلتر Sobel للحواف', textEn: 'Sobel Edge Filter', cat: 2 },
-          { textAr: 'Average Pooling (متوسط الملامح)', textEn: 'Average Pooling', cat: 1 },
-          { textAr: 'مرشح التنعيم Gaussian Kernel', textEn: 'Gaussian Kernel Filter', cat: 2 }
-        ]
-      },
-      rankSteps: [
-        { id: 1, textAr: '1️⃣ استقبال مصفوفة بكسلات الصورة', textEn: '1️⃣ Image Pixel Input', correctOrder: 1 },
-        { id: 2, textAr: '2️⃣ تطبيق فلاتر التلافيف Convolution', textEn: '2️⃣ Convolution Filtering', correctOrder: 2 },
-        { id: 3, textAr: '3️⃣ ضغط الملامح عبر Max Pooling', textEn: '3️⃣ Max Pooling Compression', correctOrder: 3 },
-        { id: 4, textAr: '4️⃣ التكثيف والتصنيف في Fully Connected', textEn: '4️⃣ Fully Connected Classification', correctOrder: 4 },
-      ],
-      mazeDoors: [
-        { label: 'الباب A', optionAr: 'Max Pooling (المسار الآمن 🚪✨)', optionEn: 'Max Pooling', isCorrect: true },
-        { label: 'الباب B', optionAr: 'Tokenization (طريق مسدود 💀)', optionEn: 'Tokenization', isCorrect: false },
-        { label: 'الباب C', optionAr: 'Recurrent State (طريق مسدود 💀)', optionEn: 'Recurrent State', isCorrect: false },
-        { label: 'الباب D', optionAr: 'Softmax Classifier (طريق مسدود 💀)', optionEn: 'Softmax Classifier', isCorrect: false },
-      ]
-    },
-    nlp_transformers: {
-      quizQuestions: [
-        { qAr: 'ما هي الآلية الثورية التي تعتمد عليها معمارية Transformer؟', qEn: 'What foundational mechanism powers Transformers?', optionsAr: ['الانتباه الذاتي (Self-Attention)', 'التأخير التكراري', 'الترشيح البصري', 'الحد الخطوي'], optionsEn: ['Self-Attention Mechanism', 'Recurrent Delay', 'Visual Filtering', 'Step Limit'], correct: 0, explanationAr: 'الانتباه الذاتي (Self-Attention) ترتبط سياقياً بكل الكلمات في النص.' }
-      ],
-      matchPairs: [
-        { id: '1', term: 'Self-Attention', defAr: 'حساب وزن وأهمية كل كلمة بالنسبة للجملة', defEn: 'Computes contextual weights for tokens' },
-        { id: '2', term: 'Tokenization', defAr: 'تقسيم النصوص الكبيرة إلى كلمات أو رموز', defEn: 'Splits raw text strings into discrete tokens' },
-        { id: '3', term: 'Transformer Encoder', defAr: 'معالجة النص وتحويله لتمثيل دلالي عميق', defEn: 'Processes text into deep embeddings' },
-        { id: '4', term: 'Context Window', defAr: 'أقصى عدد رموز يستوعبها النموذج في الاستفسار', defEn: 'Maximum token context capacity' },
-      ],
-      trueFalseStatements: [
-        { statementAr: 'تسمح آلية Self-Attention بفهم سياق الكلمة بناءً على باقي الجملة.', statementEn: 'Self-Attention understands token context.', isTrue: true, explanationAr: 'صحيح! الانتباه الذاتي يربط سياق الكلمات ببعضها.' },
-        { statementAr: 'عملية Tokenization تقوم بدمج الكتاب كاملاً في كلمة واحدة.', statementEn: 'Tokenization merges entire book into 1 word.', isTrue: false, explanationAr: 'خطأ! Tokenization تجزئ النصوص لرموز وحدات صغيرة.' }
-      ],
-      anagramTerm: 'ATTENTION',
-      missingWordSentence: {
-        sentenceAr: 'تعتمد نماذج المحولات على آلية __________ لحساب العلاقات بين كلمات النص.',
-        wordOptionsAr: ['Self-Attention', 'Convolution', 'Pooling', 'Gradient Descent'],
-        correctWord: 'Self-Attention'
-      },
-      groupSortData: {
-        cat1Ar: '🤖 معمارية المحولات',
-        cat1En: 'Transformer Architecture',
-        cat2Ar: '🔤 معالجة النصوص',
-        cat2En: 'Text Preprocessing',
-        items: [
-          { textAr: 'Multi-Head Attention', textEn: 'Multi-Head Attention', cat: 1 },
-          { textAr: 'تجزئة النص Tokenization', textEn: 'Tokenization', cat: 2 },
-          { textAr: 'الترميز الموقعي Positional Encoding', textEn: 'Positional Encoding', cat: 1 },
-          { textAr: 'حذف كلمات التوقف Stop Words', textEn: 'Stop Words Removal', cat: 2 }
-        ]
-      },
-      rankSteps: [
-        { id: 1, textAr: '1️⃣ تجزئة الجملة إلى رموز Tokenization', textEn: '1️⃣ Tokenization', correctOrder: 1 },
-        { id: 2, textAr: '2️⃣ تضمين المتجهات والترميز الموقعي', textEn: '2️⃣ Positional Embeddings', correctOrder: 2 },
-        { id: 3, textAr: '3️⃣ تطبيق أوزان الانتباه الذاتي Self-Attention', textEn: '3️⃣ Self-Attention Weights', correctOrder: 3 },
-        { id: 4, textAr: '4️⃣ التنبؤ وتوليد الرمز التالي Next Token', textEn: '4️⃣ Next Token Generation', correctOrder: 4 },
-      ],
-      mazeDoors: [
-        { label: 'الباب A', optionAr: 'Convolution Kernel (طريق مسدود 💀)', optionEn: 'Convolution Kernel', isCorrect: false },
-        { label: 'الباب B', optionAr: 'Self-Attention (المسار الآمن 🚪✨)', optionEn: 'Self-Attention', isCorrect: true },
-        { label: 'الباب C', optionAr: 'Decision Tree (طريق مسدود 💀)', optionEn: 'Decision Tree', isCorrect: false },
-        { label: 'الباب D', optionAr: 'Random Forest (طريق مسدود 💀)', optionEn: 'Random Forest', isCorrect: false },
-      ]
-    },
-    math_for_ai: {
-      quizQuestions: [
-        { qAr: 'ما الهدف الأساسي من خوارزمية الانحدار الخطي Gradient Descent؟', qEn: 'What is the goal of Gradient Descent?', optionsAr: ['تقليل قيمة دالة الخطأ لأدنى مستوى', 'زيادة نسبة الخطأ', 'إلغاء المصفوفات', 'حفظ المدخلات'], optionsEn: ['Minimize loss function', 'Increase loss', 'Cancel matrices', 'Save inputs'], correct: 0, explanationAr: 'Gradient Descent تبحث عن أدنى نقطة في منحنى الخطأ وتعدل الأوزان باتجاهها.' }
-      ],
-      matchPairs: [
-        { id: '1', term: 'Matrix Product', defAr: 'ضرب مصفوفات أوزان المدخلات ترشيحاً للإشارة', defEn: 'Matrix dot product of weight vectors' },
-        { id: '2', term: 'Gradient Descent', defAr: 'خوارزمية الانحدار الخطي للوصول لأدنى خطأ', defEn: 'Optimization finding minimum loss point' },
-        { id: '3', term: 'Partial Derivative', defAr: 'حساب معدل تغير الخطأ بالنسبة لوزن محدد', defEn: 'Calculates rate of loss change per weight' },
-        { id: '4', term: 'Vector Transpose', defAr: 'قلب الصفوف إلى أعمدة لضبط أبعاد المصفوفة', defEn: 'Flips rows into columns for matching' },
-      ],
-      trueFalseStatements: [
-        { statementAr: 'تهدف خوارزمية Gradient Descent للوصول لأدنى قيمة في دالة الخطأ.', statementEn: 'Gradient Descent minimizes loss function.', isTrue: true, explanationAr: 'صحيح!' },
-        { statementAr: 'المشتقة الجزئية تحسب معدل تغير الأوزان بدون علاقة بالخطأ.', statementEn: 'Partial derivative ignores loss.', isTrue: false, explanationAr: 'خطأ! المشتقة الجزئية تحسب بالضبط معدل تغير الخطأ بالنسبة لكل وزن.' }
-      ],
-      anagramTerm: 'GRADIENT',
-      missingWordSentence: {
-        sentenceAr: 'تهدف خوارزمية __________ لتعديل المعاملات للوصول لأقل قيمة خطأ ممكنة.',
-        wordOptionsAr: ['Gradient Descent', 'Pooling', 'Tokenization', 'ReLU'],
-        correctWord: 'Gradient Descent'
-      },
-      groupSortData: {
-        cat1Ar: '🔢 جبر خطي ومصفوفات',
-        cat1En: 'Linear Algebra',
-        cat2Ar: '📈 تفاضل وتحسين',
-        cat2En: 'Calculus & Optimization',
-        items: [
-          { textAr: 'ضرب المصفوفات Matrix Product', textEn: 'Matrix Product', cat: 1 },
-          { textAr: 'الانحدار الخطي Gradient Descent', textEn: 'Gradient Descent', cat: 2 },
-          { textAr: 'المتجهات الذاتية Eigenvectors', textEn: 'Eigenvectors', cat: 1 },
-          { textAr: 'المشتقة الجزئية Partial Derivative', textEn: 'Partial Derivative', cat: 2 }
-        ]
-      },
-      rankSteps: [
-        { id: 1, textAr: '1️⃣ حساب التوقع الحالي للموديل Forward', textEn: '1️⃣ Forward Model Prediction', correctOrder: 1 },
-        { id: 2, textAr: '2️⃣ قياس قيمة دالة الخطأ Loss Function', textEn: '2️⃣ Compute Loss Value', correctOrder: 2 },
-        { id: 3, textAr: '3️⃣ حساب ميل المشتقة الجزئية Gradient', textEn: '3️⃣ Compute Loss Gradients', correctOrder: 3 },
-        { id: 4, textAr: '4️⃣ تحديث المعاملات بعكس التدرج Update', textEn: '4️⃣ Update Weight Parameters', correctOrder: 4 },
-      ],
-      mazeDoors: [
-        { label: 'الباب A', optionAr: 'Gradient Descent (المسار الآمن 🚪✨)', optionEn: 'Gradient Descent', isCorrect: true },
-        { label: 'الباب B', optionAr: 'K-Means Clustering (طريق مسدود 💀)', optionEn: 'K-Means Clustering', isCorrect: false },
-        { label: 'الباب C', optionAr: 'Tokenization (طريق مسدود 💀)', optionEn: 'Tokenization', isCorrect: false },
-        { label: 'الباب D', optionAr: 'Max Pooling (طريق مسدود 💀)', optionEn: 'Max Pooling', isCorrect: false },
-      ]
-    }
-  };
-
-  const topicTypeKey = getTopicType(activeTopic);
-  const currentData = topicGameData[topicTypeKey] || topicGameData[activeTopic.id] || topicGameData.neural_nets;
   const currentTemplate = TOP_15_WORDWALL_TEMPLATES.find(t => t.id === selectedTemplateId) || TOP_15_WORDWALL_TEMPLATES[0];
 
   // Reset gameplay state when template or topic changes
@@ -379,7 +84,7 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
     setMazeSelectedDoor(null);
     setGameCompleted(false);
     setFeedbackMsg(null);
-  }, [selectedTemplateId, activeTopicId]);
+  }, [selectedTemplateId, activeTopicId, currentData]);
 
   const handleClaimXP = () => {
     if (!gameCompleted) {

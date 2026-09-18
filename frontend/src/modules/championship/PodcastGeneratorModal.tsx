@@ -12,20 +12,15 @@ import {
   Check, 
   X
 } from 'lucide-react';
+import { getPodcastDialogue, type PodcastHostTurn } from '../../services/topicContentService';
 
 interface PodcastGeneratorModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface HostTurn {
-  speaker: 'host1' | 'host2';
-  speakerName: string;
-  avatar: string;
-  role: string;
-  text: string;
-  timestamp: string;
-}
+type HostTurn = PodcastHostTurn;
+
 
 export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ isOpen, onClose }) => {
   const { language, themeMode, activeTopicId, topics } = useStore();
@@ -48,7 +43,10 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [dialogue, setDialogue] = useState<HostTurn[]>([]);
   const [isBuffering, setIsBuffering] = useState<boolean>(false);
-  const [voiceEngine, setVoiceEngine] = useState<'azure' | 'google'>('azure');
+  const [voiceEngine, setVoiceEngine] = useState<'elevenlabs' | 'azure' | 'google'>('elevenlabs');
+  const [elevenApiKey, setElevenApiKey] = useState<string>(() => {
+    return typeof window !== 'undefined' ? (localStorage.getItem('shaghoof_eleven_key') || '') : '';
+  });
 
   // Studio Neural Audio references
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -60,7 +58,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
   const prefetchLineAudio = async (index: number) => {
     if (index >= dialogue.length) return;
     const item = dialogue[index];
-    const cacheKey = `${voiceEngine}_${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
+    const cacheKey = `v3_${voiceEngine}_${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
     if (audioBlobCacheRef.current.has(cacheKey)) return;
 
     try {
@@ -73,7 +71,8 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
           language: isAr ? 'ar' : 'en',
           dialect: dialectMode,
           speed: playbackSpeed,
-          engine: voiceEngine
+          engine: voiceEngine,
+          api_key: elevenApiKey || undefined
         })
       });
       if (res.ok) {
@@ -102,7 +101,7 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
     }
 
     const item = dialogue[index];
-    const cacheKey = `${voiceEngine}_${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
+    const cacheKey = `v3_${voiceEngine}_${item.speaker}_${dialectMode}_${playbackSpeed}_${item.text}`;
     let audioUrl = audioBlobCacheRef.current.get(cacheKey);
 
     if (!audioUrl) {
@@ -117,7 +116,8 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
             language: isAr ? 'ar' : 'en',
             dialect: dialectMode,
             speed: playbackSpeed,
-            engine: voiceEngine
+            engine: voiceEngine,
+            api_key: elevenApiKey || undefined
           })
         });
         if (res.ok) {
@@ -208,131 +208,10 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
     if (synthRef.current) {
       synthRef.current.cancel();
     }
+    audioBlobCacheRef.current.clear();
     setIsPlaying(false);
     setCurrentLineIndex(0);
   };
-
-  // Pre-configured rich dialogues
-  const dialoguesArEgyptian: HostTurn[] = [
-    {
-      speaker: 'host1',
-      speakerName: 'د. يوسف',
-      avatar: '👨‍🏫',
-      role: 'كبير باحثي الذكاء الاصطناعي',
-      text: `أهلاً بيكم يا شباب في حلقة جديدة من كبسولة بودكاست شغوف! النهاردة معانا موضوع المحاضرة الأهم: "${topicTitle}". إزيك يا مريم، جاهزة نفكك الفكرة دي ببساطة؟`,
-      timestamp: '00:00'
-    },
-    {
-      speaker: 'host2',
-      speakerName: 'مريم',
-      avatar: '👩‍🔬',
-      role: 'مهندسة ذكاء اصطناعي وباحثة',
-      text: `أهلاً دكتور يوسف! بصراحة جداً ومتحمسة. أغلب الطلبة لما بيشوفوا معادلات ${topicTitle} في ملفات PDF بيتخضوا من كمية الرموز والاشتقاقات الجزئية!`,
-      timestamp: '00:15'
-    },
-    {
-      speaker: 'host1',
-      speakerName: 'د. يوسف',
-      avatar: '👨‍🏫',
-      role: 'كبير باحثي الذكاء الاصطناعي',
-      text: `بالظبط! السر دايماً إننا نفهم الحدس قبل الرياضة: تخيلي إنك بتتعلمي نشنة على هدف في الرماية، أول رمية جت بعيد 10 سم شمال، هتعملي إيه في الرمية التانية؟`,
-      timestamp: '00:32'
-    },
-    {
-      speaker: 'host2',
-      speakerName: 'مريم',
-      avatar: '👩‍🔬',
-      role: 'مهندسة ذكاء اصطناعي وباحثة',
-      text: `أكيد هعدل إيدي 10 سم يمين عشان أوازن الغلطة الأولى! يعني عكست الاتجاه بناءً على الخطأ!`,
-      timestamp: '00:48'
-    },
-    {
-      speaker: 'host1',
-      speakerName: 'د. يوسف',
-      avatar: '👨‍🏫',
-      role: 'كبير باحثي الذكاء الاصطناعي',
-      text: `عبقرية! هو ده بالظبط Backpropagation أو التمرير الخلفي! بنحسب الخطأ عند المخرجات، ونرجع نوزع المسؤولية على كل طبقة بقاعدة Chain Rule عشان نظبط الأوزان.`,
-      timestamp: '01:05'
-    },
-    {
-      speaker: 'host2',
-      speakerName: 'مريم',
-      avatar: '👩‍🔬',
-      role: 'مهندسة ذكاء اصطناعي وباحثة',
-      text: `يا سلام! وبكده الموديل في كل جولة تدريب بيقرب من الهدف خطوة بخطوة لحد ما نسبة الخطأ تكاد تنعدم. فهمت الفكرة تماماً ومستعدة للتطبيق الحركي!`,
-      timestamp: '01:25'
-    }
-  ];
-
-  const dialoguesArStandard: HostTurn[] = [
-    {
-      speaker: 'host1',
-      speakerName: 'د. يوسف',
-      avatar: '👨‍🏫',
-      role: 'خبير النظم الذكية',
-      text: `مرحباً بكم في حلقة جديدة من البودكاست التعليمي لمنصة شغوف. موضوع جلستنا اليوم يتمحور حول "${topicTitle}". أهلاً بكِ مريم.`,
-      timestamp: '00:00'
-    },
-    {
-      speaker: 'host2',
-      speakerName: 'مريم',
-      avatar: '👩‍🔬',
-      role: 'باحثة نظم الحوسبة',
-      text: `أهلاً بك دكتور يوسف. يمثل مفهوم ${topicTitle} حجر الزاوية في تدريب الشبكات العصبية العميقة، وغالباً ما يحتاج الطلاب لتوضيح فلسفته الجوهرية.`,
-      timestamp: '00:15'
-    },
-    {
-      speaker: 'host1',
-      speakerName: 'د. يوسف',
-      avatar: '👨‍🏫',
-      role: 'خبير النظم الذكية',
-      text: `صحيح تماماً. المبدأ يقوم على الانحدار التدريجي وحساب المشتقات الجزئية لدالة الخسارة بالنسبة لكل وزن، مما يسمح بنشر إشارات التصحيح عكسياً.`,
-      timestamp: '00:32'
-    },
-    {
-      speaker: 'host2',
-      speakerName: 'مريم',
-      avatar: '👩‍🔬',
-      role: 'باحثة نظم الحوسبة',
-      text: `وهذا يفسر التكامل الفريد في شغوف بين الصوت التوضيحي والمحاكاة الحركية، ليترسخ المفهوم النظري عبر الممارسة العملية التفاعلية.`,
-      timestamp: '00:50'
-    }
-  ];
-
-  const dialoguesEn: HostTurn[] = [
-    {
-      speaker: 'host1',
-      speakerName: 'Dr. Yusuf',
-      avatar: '👨‍🏫',
-      role: 'Lead AI Scientist',
-      text: `Welcome back to the SHAGHOOF AI Deep-Dive Podcast! Today we explore a foundational topic from your active curriculum: "${topicTitle}". Ready Mariam?`,
-      timestamp: '00:00'
-    },
-    {
-      speaker: 'host2',
-      speakerName: 'Mariam',
-      avatar: '👩‍🔬',
-      role: 'AI Research Engineer',
-      text: `Thrilled to be here! "${topicTitle}" can feel mathematically daunting at first glance, but once you visualize the intuition, it completely demystifies deep learning.`,
-      timestamp: '00:15'
-    },
-    {
-      speaker: 'host1',
-      speakerName: 'Dr. Yusuf',
-      avatar: '👨‍🏫',
-      role: 'Lead AI Scientist',
-      text: `Exactly! Think of it like tuning guitar strings by ear: each turn adjusts pitch until the dissonance reaches absolute zero. That is gradient descent in action!`,
-      timestamp: '00:35'
-    },
-    {
-      speaker: 'host2',
-      speakerName: 'Mariam',
-      avatar: '👩‍🔬',
-      role: 'AI Research Engineer',
-      text: `Brilliant metaphor! And this feeds directly into SHAGHOOF's VARK player, allowing learners to tweak weights hands-on in the Kinesthetic playground.`,
-      timestamp: '00:55'
-    }
-  ];
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -340,20 +219,50 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
     }
   }, []);
 
+  // Dynamically load tailored dialogue for the active topic
   useEffect(() => {
-    if (!isAr) {
-      setDialogue(dialoguesEn);
-    } else if (dialectMode) {
-      setDialogue(dialoguesArEgyptian);
-    } else {
-      setDialogue(dialoguesArStandard);
-    }
+    // 1. Immediately update dialogue using smart knowledge matrix (zero latency)
+    const initialDialogue = getPodcastDialogue(currentTopic, isAr ? 'ar' : 'en', dialectMode);
+    setDialogue(initialDialogue as HostTurn[]);
     setCurrentLineIndex(0);
     setIsPlaying(false);
+    audioBlobCacheRef.current.clear();
     if (synthRef.current) {
       synthRef.current.cancel();
     }
-  }, [dialectMode, isAr, activeTopicId]);
+
+    // 2. Query backend generation asynchronously for real-time generative dialogue
+    let isCancelled = false;
+    const fetchBackendDialogue = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/v1/championship/podcast/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: topicTitle,
+            language: isAr ? 'ar' : 'en',
+            dialect: dialectMode
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (!isCancelled && data && Array.isArray(data.dialogue) && data.dialogue.length > 0) {
+            setDialogue(data.dialogue);
+          }
+        }
+      } catch (err) {
+        // Fallback already active from topicContentService
+      }
+    };
+
+    if (isOpen) {
+      fetchBackendDialogue();
+    }
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [dialectMode, isAr, activeTopicId, isOpen]);
 
   const handleCopyTranscript = () => {
     const textToCopy = dialogue.map(d => `[${d.timestamp}] ${d.speakerName} (${d.role}):\n${d.text}`).join('\n\n');
@@ -390,10 +299,12 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
                 <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
                   NotebookLM Style
                 </span>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/30 flex items-center gap-1">
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-500 border border-purple-500/30 flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
                   <span>
-                    {voiceEngine === 'azure' 
+                    {voiceEngine === 'elevenlabs'
+                      ? (isAr ? '👑 إليفن لابس (ElevenLabs Multilingual v2)' : 'ElevenLabs Multilingual v2')
+                      : voiceEngine === 'azure' 
                       ? (isAr ? 'صوت استوديو موحد (Azure Neural)' : 'Azure Studio Neural')
                       : (isAr ? 'محرك جوجل الصوتي الموحد (Google AI Voice)' : 'Google AI Unified Voice')
                     }
@@ -472,22 +383,37 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
                 </div>
               )}
 
-              {/* Voice Engine Switcher (Azure Studio Neural vs Google AI) */}
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-200/60 dark:bg-slate-800/80 border border-slate-300/60 dark:border-slate-700">
+              {/* Voice Engine Switcher (ElevenLabs vs Azure vs Google) */}
+              <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-200/60 dark:bg-slate-800/80 border border-slate-300/60 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVoiceEngine('elevenlabs');
+                    handleReset();
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-black transition flex items-center gap-1 ${
+                    voiceEngine === 'elevenlabs' 
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                  title={isAr ? 'أعلى دقة بشرية عالمياً - ElevenLabs Multilingual v2' : 'ElevenLabs Multilingual v2'}
+                >
+                  <span>👑 {isAr ? 'ElevenLabs v2' : 'ElevenLabs'}</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => {
                     setVoiceEngine('azure');
                     handleReset();
                   }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
                     voiceEngine === 'azure' 
                       ? 'bg-blue-600 text-white shadow-sm' 
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
-                  title={isAr ? 'أصوات استوديو بنبرة موحدة لا تتغير' : 'Studio Neural Voices'}
+                  title={isAr ? 'أصوات استوديو إذاعية مصرية فائقة النقاء' : 'Studio Neural Voices'}
                 >
-                  <span>🎙️ {isAr ? 'استوديو (Azure)' : 'Studio'}</span>
+                  <span>🎙️ {isAr ? 'استوديو' : 'Studio'}</span>
                 </button>
                 <button
                   type="button"
@@ -495,14 +421,37 @@ export const PodcastGeneratorModal: React.FC<PodcastGeneratorModalProps> = ({ is
                     setVoiceEngine('google');
                     handleReset();
                   }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
                     voiceEngine === 'google' 
                       ? 'bg-emerald-600 text-white shadow-sm' 
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                   title={isAr ? 'محرك جوجل الصوتي الموحد' : 'Google AI Voice'}
                 >
-                  <span>🌐 {isAr ? 'جوجل (Google)' : 'Google AI'}</span>
+                  <span>🌐 {isAr ? 'جوجل' : 'Google'}</span>
+                </button>
+
+                {/* Optional Key Config Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const input = window.prompt(
+                      isAr 
+                        ? 'أدخل مفتاح ElevenLabs API Key الخاص بك (اختياري - لتشغيل الموديل بمفتاحك):' 
+                        : 'Enter your ElevenLabs API Key (optional):',
+                      elevenApiKey
+                    );
+                    if (input !== null) {
+                      setElevenApiKey(input.trim());
+                      localStorage.setItem('shaghoof_eleven_key', input.trim());
+                      audioBlobCacheRef.current.clear();
+                      handleReset();
+                    }
+                  }}
+                  className="px-1.5 py-1 text-slate-400 hover:text-purple-500 transition text-xs font-bold"
+                  title={isAr ? 'إدخال مفتاح ElevenLabs API Key' : 'Configure ElevenLabs Key'}
+                >
+                  ⚙️
                 </button>
               </div>
             </div>

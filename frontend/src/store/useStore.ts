@@ -283,9 +283,13 @@ export const useStore = create<AppState>((set, get) => ({
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
 
+    const currentTopic = get().topics.find(t => t.id === get().activeTopicId) || get().topics[0];
+    const isAr = lang === 'ar';
+    const topicTitle = currentTopic ? (isAr ? currentTopic.titleAr : currentTopic.titleEn) : '';
+
     const initialText = lang === 'en'
-      ? 'Welcome to SHAGHOOF AI! I am your AI Tutor. How can I help you explore Neural Networks today?'
-      : 'أهلاً بك في منصة SHAGHOOF AI! أنا مساعدك التعليمي. كيف تحب أن نبدأ دراسة الشبكات العصبية اليوم؟';
+      ? `Welcome to SHAGHOOF AI! I am your AI Tutor. How can I help you explore ${topicTitle} today?`
+      : `أهلاً بك في منصة SHAGHOOF AI! أنا مساعدك التعليمي. كيف تحب أن نبدأ دراسة ${topicTitle} اليوم؟ 🚀`;
 
     set({
       messages: [
@@ -316,13 +320,19 @@ export const useStore = create<AppState>((set, get) => ({
     const topicTitle = targetTopic ? (isAr ? targetTopic.titleAr : targetTopic.titleEn) : id;
 
     const newMsgText = isAr
-      ? `تم الانتقال لموضوع: ${topicTitle}! أنا معك لمساعدتك في فهم كل نقطة بكل الموداليتيز.`
-      : `Switched to topic: ${topicTitle}! I am ready to guide you through all learning modalities.`;
+      ? `أهلاً بك في ${topicTitle}! أنا مساعدك التعليمي، وجاهز لمساعدتك في فهم كل تفصيلة بالمخططات البصرية والكبسولات التفاعلية. كيف تحب أن نبدأ اليوم؟ 🚀`
+      : `Welcome to ${topicTitle}! I am your AI Tutor, ready to guide you through this session with interactive visualizations and intuitive analogies. How would you like to begin? 🚀`;
 
-    get().addMessage({
-      sender: 'bot',
-      text: newMsgText,
-      feynmanLevel: 'intuitive'
+    set({
+      messages: [
+        {
+          id: Date.now().toString(),
+          sender: 'bot',
+          text: newMsgText,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          feynmanLevel: 'intuitive'
+        }
+      ]
     });
   },
   addTopic: (newTopic: CourseTopic) => {
@@ -382,7 +392,7 @@ export const useStore = create<AppState>((set, get) => ({
     {
       id: '1',
       sender: 'bot',
-      text: 'أهلاً بك في منصة SHAGHOOF AI! أنا مساعدك التعليمي. كيف تحب أن نبدأ دراسة الشبكات العصبية اليوم؟',
+      text: `أهلاً بك في منصة SHAGHOOF AI! أنا مساعدك التعليمي. كيف تحب أن نبدأ دراسة ${defaultTopics[0].titleAr} اليوم؟ 🚀`,
       timestamp: '10:00 AM',
       feynmanLevel: 'intuitive'
     }
@@ -420,9 +430,9 @@ export const useStore = create<AppState>((set, get) => ({
         } else if (text.includes('hello') || text.includes('hi ') || text === 'hi' || text.includes('مرحبا') || text.includes('أهلا') || text.includes('ازيك') || text.includes('السلام عليكم')) {
           botResponse = isAr
             ? (egyptianDialect 
-                ? 'أهلاً بيك يا بطل! جاهز نكمل محطة النهاردة في الشبكات العصبية؟ أومرني بتحب نبدأ بإيه؟ 🚀'
-                : 'أهلاً ومرحباً بك! يسعدني مساعدتك في رحلتك التعليمية اليوم. كيف تفضل أن نبدأ؟ 🚀')
-            : 'Hello! I am your SHAGHOOF AI Learning Assistant. Ready to explore Neural Networks together today? 🚀';
+                ? `أهلاً بيك يا بطل! جاهز نكمل محطة النهاردة في ${activeTopic.titleAr}؟ أومرني بتحب نبدأ بإيه؟ 🚀`
+                : `أهلاً ومرحباً بك! يسعدني مساعدتك في دراسة ${activeTopic.titleAr}. كيف تفضل أن نبدأ؟ 🚀`)
+            : `Hello! I am your SHAGHOOF AI Learning Assistant. Ready to explore ${activeTopic.titleEn} together today? 🚀`;
         } else if (text.includes('who are you') || text.includes('who r u') || text.includes('من أنت') || text.includes('مين انت')) {
           botResponse = isAr
             ? (egyptianDialect 
@@ -435,22 +445,36 @@ export const useStore = create<AppState>((set, get) => ({
               botResponse = 'Think of Python Concurrency like a busy kitchen: Synchronous code waits for water to boil before cutting vegetables. AsyncIO serves other customers while waiting for the kettle (Event Loop). Multiprocessing hires separate chefs across CPU cores to bypass the GIL!';
             } else if (topicType === 'rag') {
               botResponse = 'RAG is like an open-book exam for AI! Instead of hallucinating, the model searches your verified Moodle PDFs, finds the exact relevant paragraph, and cites it directly.';
+            } else if (topicType === 'transformers') {
+              botResponse = 'Think of Self-Attention like a group discussion: every token simultaneously compares itself to all other tokens using Query, Key, and Value projections to capture deep contextual meaning in parallel!';
+            } else if (topicType === 'cnn') {
+              botResponse = 'Think of a CNN like scanning a photo with magnifying lenses: small convolutional kernels detect edges and textures, while pooling layers shrink the dimension to preserve high-level patterns!';
+            } else if (topicType === 'rnn') {
+              botResponse = 'Think of an RNN like a mental notepad while reading: each word updates your recurrent memory state, and LSTM gates decide what to remember and what to discard!';
             } else {
-              botResponse = 'Think of a Neural Network like a football team: Inputs are the players, the Hidden Layer is the tactical strategy, and Output is scoring a goal! If they miss, the coach (Backpropagation) adjusts weights to fix errors instantly.';
+              botResponse = `Think of ${activeTopic.titleEn} as a modular pipeline: each step transforms inputs through specialized representations to minimize error and maximize performance!`;
             }
           } else if (text.includes('hint') || text.includes('tactic')) {
             if (topicType === 'concurrency') {
               botResponse = '💡 Proactive Hint: Python\'s GIL prevents threads from running CPU-heavy bytecode simultaneously. Use AsyncIO/Threads for network I/O, and Multiprocessing for heavy math!';
             } else if (topicType === 'rag') {
               botResponse = '💡 Proactive Hint: Chunk overlap (e.g. 100 chars) is crucial to avoid losing semantic continuity between document boundaries.';
+            } else if (topicType === 'transformers') {
+              botResponse = '💡 Proactive Hint: Scaled Dot-Product divides Q*K^T by sqrt(d_k) to prevent extreme softmax gradients in high-dimensional embedding spaces!';
+            } else if (topicType === 'cnn') {
+              botResponse = '💡 Proactive Hint: Convolutional filters achieve spatial invariance, meaning they recognize features regardless of where they appear in the image!';
             } else {
-              botResponse = '💡 Proactive Hint: Focus on how loss gradients flow backward from the Output Layer to the Hidden Layer weights during Backpropagation!';
+              botResponse = `💡 Proactive Hint: Focus on the primary input representation and how the model evaluates its objective function in ${activeTopic.titleEn}!`;
             }
           } else if (text.includes('example')) {
             if (topicType === 'concurrency') {
               botResponse = 'Practical Example: Downloading 50 Moodle PDFs takes 50 seconds sequentially, but under 2 seconds with AsyncIO or ThreadPoolExecutor!';
+            } else if (topicType === 'transformers') {
+              botResponse = 'Practical Example: In "The bank of the river" vs "Money in the bank", Self-Attention uses surrounding tokens ("river" vs "money") to disambiguate the word "bank" effortlessly!';
+            } else if (topicType === 'cnn') {
+              botResponse = 'Practical Example: An image classifier passes 150x150 Intel landscape pixels through 3x3 kernels to identify mountains, forests, and buildings!';
             } else {
-              botResponse = 'Practical Example: An image recognition model takes image pixels as inputs, processing features through hidden layers to confidently identify objects like cats or cars!';
+              botResponse = `Practical Example: In ${activeTopic.titleEn}, structured data flows into feature layers to yield high-confidence predictions!`;
             }
           } else if (text.includes('slower') || text.includes('step')) {
             botResponse = 'Absolutely! We will move step-by-step at a comfortable pace for maximum comprehension.';
@@ -461,8 +485,10 @@ export const useStore = create<AppState>((set, get) => ({
               botResponse = 'Concurrency Summary 📌:\n1. I/O-Bound tasks: AsyncIO and Threading.\n2. CPU-Bound tasks: Multiprocessing to bypass Python\'s GIL.';
             } else if (topicType === 'rag') {
               botResponse = 'RAG Summary 📌:\n1. Chunk documents with overlap.\n2. Generate vector embeddings in Weaviate.\n3. Ground LLM with verified page citations.';
+            } else if (topicType === 'transformers') {
+              botResponse = 'Attention Summary 📌:\n1. Tokenize text & project Q, K, V matrices.\n2. Compute parallel Self-Attention with Softmax.\n3. Multi-Head attention models diverse syntactic & semantic patterns.';
             } else {
-              botResponse = 'Key Points Summary 📌:\n1. Forward pass computes output signals.\n2. Backpropagation calculates error gradient and updates connection weights.';
+              botResponse = `Key Points Summary for ${activeTopic.titleEn} 📌:\n1. Formulate input representation.\n2. Process signals through modular architecture.\n3. Optimize performance iteratively.`;
             }
           } else if (text.includes('understand') || text.includes('confident') || text.includes('great') || text.includes('awesome')) {
             botResponse = 'Awesome work! Your strong grasp clears the path to master this topic! 🚀';
@@ -476,22 +502,36 @@ export const useStore = create<AppState>((set, get) => ({
                 botResponse = 'ولا يهمك يا بطل! بص يا سيدي، تخيل البرمجة المتزامنة دي زي مطعم: لو الكود شغال Sync، الشيف مش هيعمل أي أكل غير لما الطباخ التاني يخلص تقطيع البصل! لكن في الـ AsyncIO، أول ما حاجة تتحط على النار، الشيف بيخدم زبون تاني على طول (Event Loop)! ولو عندك شغل حسابات تقيل بتشغل كذا شيف على أنوية مختلفة (Multiprocessing)!';
               } else if (topicType === 'rag') {
                 botResponse = 'الـ RAG ده يا سيدي عامل زي الطالب الشاطر اللي داخل الامتحان ومعاه الكتاب الرسمي ومصرح له يفتحه! بدل ما الذكاء الاصطناعي يفتي ويهلوس، بيبحث في ملفات الـ Moodle ويطلع الصفحة بالضبط ويجاوبك منها!';
+              } else if (topicType === 'transformers') {
+                botResponse = 'ولا يهمك يا بطل! بص يا سيدي، تخيل الـ Self-Attention ده زي دايرة أصحاب: لما حد يتكلم، الباقيين بيبصوله وكل واحد بيفهم الكلام بناءً على علاقته بيه! الكلمة بتبص على كل كلمات الجملة في نفس اللحظة عبر مصفوفات Q و K و V عشان تفهم المعنى السياقي الصح بالتوازي!';
+              } else if (topicType === 'cnn') {
+                botResponse = 'ولا يهمك يا بطل! بص يا سيدي، الـ CNN عاملة زي عدسة مكبرة بتعدي على الصورة تستكشف الخطوط والزوايا (Kernels)! وعشان نحمل آلاف الصور بسرعة بنستخدم AsyncIO، ولما نيجي نحسب بالمعالج بنشغل Multiprocessing عشان نعدي قفل الـ GIL!';
+              } else if (topicType === 'rnn') {
+                botResponse = 'ولا يهمك يا بطل! تخيل الـ RNN دي زي شريط كاسيت ماشي خطوة بخطوة: كل كلمة بتسيب أثر في الذاكرة (Hidden State)، وخلايا الـ LSTM عندها بوابات نسيان عشان تفتكر المهم بس وما تتشتتش في الجمل الطويلة!';
               } else {
-                botResponse = 'ولا يهمك يا بطل! بص يا سيدي، تخيل الشبكة العصبية دي زي لعبة تتابع: الإشارات بتمشي من الأول للآخر، ولو النتيجة مش مظبوطة بنرجع بالراجع (Backpropagation) نعدل كل خطوة بالراحة لحد ما تظبط تماماً!';
+                botResponse = `ولا يهمك يا بطل! بص يا سيدي، موضوع ${activeTopic.titleAr} فكرته الأساسية إننا بنقسم التحدي لخطوات منظمة عشان نوصل لأعلى دقة وكفاءة برمجية ممكنة!`;
               }
             } else if (text.includes('تلميح') || text.includes('رمز')) {
               if (topicType === 'concurrency') {
                 botResponse = '💡 تلميح ميسر: لو بتتعامل مع اتصالات ويب وسحب صفحات استخدم AsyncIO أو Threads. لو بتعالج صور أو تشفير رياضي استخدم Multiprocessing عشان قفل الـ GIL ميعطلش الخيوط!';
               } else if (topicType === 'rag') {
                 botResponse = '💡 تلميح: سر دقة استرجاع الإجابات من مقررات Moodle هو الـ Overlap بين المقاطع عشان المعنى ميتفصلش في النص!';
+              } else if (topicType === 'transformers') {
+                botResponse = '💡 تلميح: الـ Query هو سؤال الكلمة، والـ Key هو هويتها، والـ Value هو محتواها الفعلي اللي بيتنقل في شبكة الانتباه!';
+              } else if (topicType === 'cnn') {
+                botResponse = '💡 تلميح: فلاتر الـ Convolution بتكتشف الأنماط في الصورة بغض النظر عن مكانها (Spatial Invariance)!';
               } else {
-                botResponse = '💡 تلميح ميسر: ركز على طريقة حركة خطأ التوقع من طبقة المخرجات للورا عشان تظبط وزن كل ارتباط عصبي!';
+                botResponse = `💡 تلميح ميسر: ركز على طريقة حركة البيانات والتحويلات في خطوات ${activeTopic.titleAr}!`;
               }
             } else if (text.includes('مثال')) {
               if (topicType === 'concurrency') {
                 botResponse = 'من عينيا! تخيل كود بيحمل 50 ملف PDF من Moodle: لو بالطريقة العادية Sync هياخد 50 ثانية. لكن بـ AsyncIO أو ThreadPool هياخد ثانيتين بس لأن الطلبات بتتسحب مع بعض في نفس وقت الانتظار!';
+              } else if (topicType === 'transformers') {
+                botResponse = 'من عينيا! تخيل جملة: "المرمى كان خالي واللاعب سجل هدف": آلية الانتباه بتربط كلمة "اللاعب" و"سجل" بكلمة "المرمى" فوراً وتفهم السياق الرياضي!';
+              } else if (topicType === 'cnn') {
+                botResponse = 'من عينيا! تخيل نظام تصنيف صور Intel Kaggle: المدخلات بكسلات المناظر الطبيعية، والفلاتر بتميز ملامح الجبال من الغابات والبحار بدقة عالية!';
               } else {
-                botResponse = 'من عينيا! تخيل نظام التعرف على صور القطط: المدخلات هي بكسلات الصورة، والشبكة بتتعلم تميز شكل الودان والعينين وتطلع القرار بثقة من غير أي لخبطة!';
+                botResponse = `من عينيا! في ${activeTopic.titleAr}، بنحول البيانات الأولية إلى مدخلات مهيكلة تتيح للنموذج استخراج النتائج بدقة!`;
               }
             } else if (text.includes('أبطأ')) {
               botResponse = 'تمام يا بطل! هنمشي خطوة بخطوة بالراحة خالص عشان تفهم كل فتفوتة في الدرس من غير أي استعجال.';
@@ -502,8 +542,10 @@ export const useStore = create<AppState>((set, get) => ({
                 botResponse = 'ملخص التزامن السريع 📌:\n1. الـ I/O-Bound حله AsyncIO و Threading.\n2. الـ CPU-Bound حله Multiprocessing لتخطي عائق الـ GIL.';
               } else if (topicType === 'rag') {
                 botResponse = 'ملخص الـ RAG 📌:\n1. تقطيع الـ PDFs لمقاطع مع overlap.\n2. تحويل لمتجهات Embeddings في Weaviate.\n3. توثيق إجابات الذكاء برقم الصفحة والمقرر.';
+              } else if (topicType === 'transformers') {
+                botResponse = 'ملخص الانتباه 📌:\n1. تجهيز الـ Tokens ومصفوفات التضمين.\n2. حساب مصفوفات Q و K و V بالـ Softmax.\n3. معالجة النص بالكامل بالتوازي عبر كروت الشاشة GPU.';
               } else {
-                botResponse = 'ملخص سريع في نقطتين 📌:\n1. التمرير الأمامي بيحسب النواتج والإشارات.\n2. التمرير الخلفي ببيصلح الأخطاء وبيظبط الأوزان.';
+                botResponse = `ملخص سريع لـ ${activeTopic.titleAr} 📌:\n1. تحديد المدخلات.\n2. المعالجة المعمارية المتخصصة.\n3. تحسين النتائج بدقة.`;
               }
             } else if (text.includes('فهمت') || text.includes('سعيد') || text.includes('ممتاز') || text.includes('واضح')) {
               botResponse = 'عاش يا بطل! فخور جداً باستيعابك السريع، يلا بينا نكمل إنجاز بقية محطات الدرس! 🚀';
@@ -514,20 +556,44 @@ export const useStore = create<AppState>((set, get) => ({
             if (text.includes('لم أفهم') || text.includes('غير واضح') || text.includes('أبسط') || text.includes('مبسط')) {
               if (topicType === 'concurrency') {
                 botResponse = 'لا تقلق أبداً! البرمجة المتزامنة في بايثون تعني تنظيم العمل: إذا كان برنامجك ينتظر الشبكة (I/O-Bound)، استخدم AsyncIO أو Threads لخدمة مهام أخرى أثناء الانتظار. وإذا كان ينفذ عمليات حسابية مكثفة (CPU-Bound)، استخدم Multiprocessing لتخطي قفل الـ GIL واستغلال كل أنوية المعالج.';
+              } else if (topicType === 'transformers') {
+                botResponse = 'لا تقلق على الإطلاق! آلية الانتباه الذاتي Self-Attention تسمح للنموذج بمعالجة كافة مفردات الجملة بالتوازي عبر مصفوفات Q و K و V لفهم السياق اللغوي دون بطء الـ RNN.';
+              } else if (topicType === 'cnn') {
+                botResponse = 'لا تقلق! شبكات الـ CNN تعمل كعدسة مكبرة تفحص أجزاء الصورة لاستخراج الحواف والأشكال عبر طبقات الالتفاف والتجميع لتقليل الحجم مع حفظ الخصائص.';
+              } else if (topicType === 'rnn') {
+                botResponse = 'لا تقلق! الشبكات التكرارية تحفظ سياق الكلمات السابقة عبر خلايا الذاكرة، وخلايا LSTM تحل مشكلة النسيان عبر بوابات ذكية.';
+              } else if (topicType === 'rag') {
+                botResponse = 'لا تقلق! الـ RAG يربط الذكاء بمستنداتك الأكاديمية: يتم تقطيع الملفات لفقرات صغيرة وحفظها كمتجهات، وعند السؤال يسترجع الفقرة الدقيقة مع رقم الصفحة لمنع الهلوسة.';
               } else {
-                botResponse = 'لا تقلق على الإطلاق! يمكننا تبسيط المفهوم: تخيل الشبكة العصبية كمعمل تجارب، كل طبقة تقوم بفحص جزء من الإشارة، وعند وجود خطأ يتم إرجاع الإشارة للخلف لتصحيح المعاملات فوراً.';
+                botResponse = `لا تقلق على الإطلاق! في ${activeTopic.titleAr} نقوم بتفكيك المفهوم إلى عناصر بسيطة متسلسلة تحقق أعلى استيعاب أكاديمي.`;
               }
             } else if (text.includes('تلميح')) {
               if (topicType === 'concurrency') {
                 botResponse = '💡 تلميح دراسي: قفل بايثون العام (GIL) يُعطل التوازي في الـ Threads للمهام الحسابية، لذا فإن Multiprocessing هو الحل الحصري للـ CPU-Bound.';
+              } else if (topicType === 'transformers') {
+                botResponse = '💡 تلميح دراسي: مصفوفة Q تسأل ومصفوفة K تجيب ومصفوفة V تنقل المعنى الفعلي، والـ Softmax يحول النواتج لنسب مئوية للأهمية.';
+              } else if (topicType === 'cnn') {
+                botResponse = '💡 تلميح دراسي: فلاتر الـ Kernel بتنزلق على بكسلات الصورة لحساب الضرب النقطي واستخراج الخصائص المكانية.';
+              } else if (topicType === 'rnn') {
+                botResponse = '💡 تلميح دراسي: سر الـ LSTM هو الـ Cell State الذي يمر كطريق سريع عبر الزمن مع التحكم به ببوابات النسيان.';
+              } else if (topicType === 'rag') {
+                botResponse = '💡 تلميح دراسي: حافظ على نسبة التداخل (Overlap) بين الـ Chunks لضمان عدم انقطاع المعنى الدلالي بين الفقرات.';
               } else {
-                botResponse = '💡 تلميح دراسي: ركز على المعادلة الرياضية للتمرير الخلفي وكيفية تدفق المشتقة الجزئية.';
+                botResponse = `💡 تلميح دراسي: ركز على تسلسل الخطوات في ${activeTopic.titleAr} وطريقة تحويل المدخلات إلى نواتج دقيقة.`;
               }
             } else if (text.includes('مثال')) {
               if (topicType === 'concurrency') {
                 botResponse = 'مثال عملي: تحميل 50 محاضرة من Moodle. بالطريقة التتابعية يستغرق 50 ثانية، بينما عبر aiohttp أو ThreadPoolExecutor ينتهي في ثانيتين فقط!';
+              } else if (topicType === 'transformers') {
+                botResponse = 'مثال عملي: جملة "بنك النيل يفتح أبوابه" مقارنة بـ "جلس على بنك النهر"؛ انتباه المحولات يفهم الفارق بين البنك المالي وبنك النهر فوراً من سياق الجملة!';
+              } else if (topicType === 'cnn') {
+                botResponse = 'مثال عملي: تصنيف صور مجموعة بيانات Intel Kaggle؛ الفلاتر الأولى تكتشف الخطوط الأفقية ثم أسطح المباني والجبال لتحديد المشهد بدقة.';
+              } else if (topicType === 'rnn') {
+                botResponse = 'مثال عملي: تقييمات Amazon مثل "المنتج كان ممتازاً لكن التوصيل تأخر جداً"، الشبكة تقيس الكلمات المتتابعة لتحديد المشاعر العامة بدقة.';
+              } else if (topicType === 'rag') {
+                botResponse = 'مثال عملي: طالب يسأل "ما موعد تسليم التكليف الأول؟"، الـ RAG يبحث في ملف توصيف المقرر ويرد بالنص ورقم الصفحة واسم الملف فوراً.';
               } else {
-                botResponse = 'مثال عملي: نظام التنبؤ بالطقس يستقبل درجات الحرارة والضغط كمدخلات، وتقوم الشبكة العصبية بوزن هذه المتغيرات للتنبؤ بهطول الأمطار.';
+                botResponse = `مثال عملي: في ${activeTopic.titleAr} نقوم بتطبيق الخوارزمية على عينة بيانات واقعية لتوضيح النتائج بشكل ملموس.`;
               }
             } else if (text.includes('أبطأ')) {
               botResponse = 'بالتأكيد! سنتقدم بخطوات ميسرة ومرحلية لضمان الاستيعاب التام قبل الانتقال للجزئية التالية.';
@@ -536,8 +602,16 @@ export const useStore = create<AppState>((set, get) => ({
             } else if (text.includes('تلخيص') || text.includes('خص')) {
               if (topicType === 'concurrency') {
                 botResponse = 'ملخص مفاهيم التزامن 📌:\n1. مهام الإدخال والإخراج I/O: نستخدم AsyncIO أو Threading.\n2. مهام المعالج المكثفة CPU: نستخدم Multiprocessing لتجاوز الـ GIL.';
+              } else if (topicType === 'transformers') {
+                botResponse = 'ملخص آلية الانتباه 📌:\n1. ترميز المفردات وتضمين المواقع (Positional Encoding).\n2. حساب انتباه Q, K, V بالتوازي وتطبيق Softmax.\n3. التخلص التام من الاختناق التسلسلي لمعالجة سياقات فائقة الطول.';
+              } else if (topicType === 'cnn') {
+                botResponse = 'ملخص الـ CNN 📌:\n1. فلاتر الالتفاف لاستخراج الخصائص المكانية.\n2. طبقات الـ Pooling لتقليص الأبعاد وتفادي فرط التخصيص.\n3. الطبقات الكثيفة للتصنيف النهائي.';
+              } else if (topicType === 'rnn') {
+                botResponse = 'ملخص الشبكات التكرارية 📌:\n1. التمرير عبر الزمن لتحديث الحالة الخفية.\n2. بوابات LSTM لتفادي تلاشي التدرج الحسابي.\n3. استخراج المعنى الكلي من السلاسل النصية.';
+              } else if (topicType === 'rag') {
+                botResponse = 'ملخص الـ RAG 📌:\n1. تقسيم المستندات وتضمينها كمتجهات في Vector DB.\n2. البحث الدلالي المتجهي بأقرب تشابه Cosine.\n3. صياغة إجابة موثقة علمياً بالصفحات دون هلوسة.';
               } else {
-                botResponse = 'ملخص النقاط الأساسية 📌:\n1. طبقة المدخلات تتولى استقبال الإشارات.\n2. التمرير الخلفي يتولى ضبط الأوزان وتفادي الخطأ.';
+                botResponse = `ملخص موضوع ${activeTopic.titleAr} 📌:\n1. استيعاب المدخلات والبيانات الأساسية.\n2. تطبيق المعالجة والخوارزمية الرياضية بدقة.\n3. التحقق من كفاءة النتائج العملية.`;
               }
             } else if (text.includes('فهمت') || text.includes('سعيد') || text.includes('ممتاز') || text.includes('واضح')) {
               botResponse = 'أحسنت صنعاً! فهمك المتميز يمهد الطريق لإتقان كافة مفاهيم هذا المقرر. 🚀';

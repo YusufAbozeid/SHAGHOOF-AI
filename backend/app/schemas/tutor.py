@@ -8,6 +8,7 @@ class ChatRequest(BaseModel):
     username: Optional[str] = Field("Yusuf AbouZeid", description="Student profile username")
     egyptian_dialect: Optional[bool] = Field(True, description="Flag for Egyptian dialect prompt adaptation")
     language: Optional[str] = Field("ar", description="Language code: ar or en")
+    topic: Optional[str] = Field("Session 1: Text Preprocessing & Attention", description="Active curriculum topic")
 
 class ChatResponse(BaseModel):
     sender: str = "bot"

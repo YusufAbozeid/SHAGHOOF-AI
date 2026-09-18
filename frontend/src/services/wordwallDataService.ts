@@ -458,6 +458,26 @@ function generateAlgorithmicQuestion(type: string, index: number, _topicTitleAr?
 }
 
 // -------------------------------------------------------------
+// -------------------------------------------------------------
+// HELPER: FISHER-YATES SHUFFLE OPTIONS
+// Guarantees correct answer is randomly and unpredictably placed (A, B, C, or D)
+// -------------------------------------------------------------
+export function shuffleQuestionOptions(question: WordwallQuizQuestion): WordwallQuizQuestion {
+  const indices = question.optionsAr.map((_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = indices[i];
+    indices[i] = indices[j];
+    indices[j] = temp;
+  }
+  return {
+    ...question,
+    optionsAr: indices.map(idx => question.optionsAr[idx]),
+    optionsEn: indices.map(idx => question.optionsEn[idx]),
+    correct: indices.indexOf(question.correct)
+  };
+}
+
 // ENGINE: NON-REPEATING BATCH GENERATOR (Guaranteed 0% Repeats & Infinite Supply)
 // -------------------------------------------------------------
 export function getUniqueBatchOfQuestions(
@@ -490,8 +510,11 @@ export function getUniqueBatchOfQuestions(
     }
   }
 
+  // Randomize option order so correct answer is randomly at index 0, 1, 2, or 3
+  const randomizedBatch = batch.map(shuffleQuestionOptions);
+
   return {
-    questions: batch,
+    questions: randomizedBatch,
     hasRemaining: true, // Always true because of algorithmic generation!
     totalPoolSize: pool.length
   };
@@ -518,7 +541,7 @@ export function getWordwallGameData(topic?: CourseTopic): WordwallTopicGameData 
   }
 
   return {
-    quizQuestions: questions,
+    quizQuestions: questions.map(shuffleQuestionOptions),
     matchPairs: [
       // Round 1
       { id: '1', term: type === 'concurrency' ? 'Global Interpreter Lock' : type === 'rag' ? 'Vector Embeddings' : type === 'cnn' ? 'Convolutional Kernel' : 'Self-Attention', defAr: type === 'concurrency' ? 'قفل مفسر يمنع التشغيل المتوازي للخيوط في CPython' : type === 'rag' ? 'متجهات رقمية تمثل المعاني الدلالية للنصوص في فضاء رياضي' : type === 'cnn' ? 'مرشح مصفوفي صغير يتحرك فوق الصورة لاستخراج ميزات الحواف' : 'حساب ترابط كل كلمة مع كافة الكلمات في السياق', defEn: 'Core architectural primitive' },

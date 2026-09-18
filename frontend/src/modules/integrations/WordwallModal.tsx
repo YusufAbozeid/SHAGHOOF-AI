@@ -599,77 +599,84 @@ export const WordwallModal: React.FC<WordwallModalProps> = ({ isOpen, onClose })
           })()}
 
           {/* TEMPLATE 3: SPIN THE WHEEL */}
-          {selectedTemplateId === 'spin_wheel' && (
-            <div className="w-full h-full flex flex-col items-center justify-between">
-              <div className="flex items-center justify-between w-full border-b border-slate-800 pb-2">
-                <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                  <Disc className="w-4 h-4 text-amber-400" />
-                  <span>{isAr ? 'أدر العجلة ليتم اختيار سؤال التحدي:' : 'Spin the wheel for topic questions:'}</span>
-                </span>
-                <span className="text-xs font-bold text-emerald-400">{isAr ? `النقاط: ${score}` : `Score: ${score}`}</span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-6 flex-1 my-auto w-full justify-center">
-                <div className="text-center space-y-3 shrink-0">
-                  <div 
-                    className="w-36 h-36 rounded-full border-4 border-amber-400 bg-gradient-to-tr from-purple-600 via-sky-600 to-amber-500 flex items-center justify-center transition-all duration-3000 shadow-[0_0_25px_rgba(245,158,11,0.3)]"
-                    style={{ transform: `rotate(${wheelRotation}deg)` }}
-                  >
-                    <Disc className="w-16 h-16 text-white opacity-80" />
-                  </div>
-                  <button 
-                    disabled={isSpinning}
-                    onClick={() => {
-                      if (isSpinning) return;
-                      setIsSpinning(true);
-                      setFeedbackMsg(null);
-                      const extra = 1440 + Math.floor(Math.random() * 360);
-                      setWheelRotation(prev => prev + extra);
-                      setTimeout(() => {
-                        setIsSpinning(false);
-                        const qIdx = Math.floor(Math.random() * activeQuizBatch.length);
-                        setCurrentQIndex(qIdx);
-                        setSelectedOption(null);
-                      }, 1500);
-                    }}
-                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-extrabold text-xs shadow-lg hover:scale-105 transition disabled:opacity-50"
-                  >
-                    {isSpinning ? (isAr ? 'العجلة تدور... 🎡' : 'Spinning...') : (isAr ? '🎡 أدر العجلة الآن!' : 'Spin Wheel!')}
-                  </button>
+          {selectedTemplateId === 'spin_wheel' && (() => {
+            const spinQ = activeQuizBatch[currentQIndex % activeQuizBatch.length] || activeQuizBatch[0];
+            return (
+              <div className="w-full h-full flex flex-col items-center justify-between">
+                <div className="flex items-center justify-between w-full border-b border-slate-800 pb-2">
+                  <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                    <Disc className="w-4 h-4 text-amber-400" />
+                    <span>{isAr ? 'أدر العجلة ليتم اختيار سؤال التحدي:' : 'Spin the wheel for topic questions:'}</span>
+                  </span>
+                  <span className="text-xs font-bold text-emerald-400">{isAr ? `النقاط: ${score}` : `Score: ${score}`}</span>
                 </div>
 
-                <div className="max-w-md w-full space-y-3">
-                  <h4 className="text-xs font-bold text-white bg-slate-900 p-3.5 rounded-xl border border-slate-800 shadow">
-                    {isAr ? currentData.quizQuestions[currentQIndex].qAr : currentData.quizQuestions[currentQIndex].qEn}
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(isAr ? currentData.quizQuestions[currentQIndex].optionsAr : currentData.quizQuestions[currentQIndex].optionsEn).map((opt, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          if (idx === currentData.quizQuestions[currentQIndex].correct) {
-                            setScore(prev => prev + 30);
-                            setFeedbackMsg({ text: isAr ? 'إجابة مذهلة وصحيحة! 🎡🎯 (+30 نقطة) - أدر العجلة مجدداً لسؤال آخر!' : 'Correct spin answer!', type: 'success' });
-                            handleClaimXP();
-                          } else {
-                            setLives(prev => Math.max(0, prev - 1));
-                            setFeedbackMsg({ text: isAr ? `إجابة خاطئة ❌! ${currentData.quizQuestions[currentQIndex].explanationAr}` : 'Incorrect answer!', type: 'error' });
-                          }
-                        }}
-                        className={`p-2.5 rounded-xl border text-[11px] font-bold text-right transition ${
-                          selectedOption !== null && idx === currentData.quizQuestions[currentQIndex].correct
-                            ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
-                            : 'bg-slate-900 border-slate-800 text-slate-200 hover:border-amber-400'
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
+                <div className="flex flex-col sm:flex-row items-center gap-6 flex-1 my-auto w-full justify-center">
+                  <div className="text-center space-y-3 shrink-0">
+                    <div 
+                      className="w-36 h-36 rounded-full border-4 border-amber-400 bg-gradient-to-tr from-purple-600 via-sky-600 to-amber-500 flex items-center justify-center transition-all duration-3000 shadow-[0_0_25px_rgba(245,158,11,0.3)]"
+                      style={{ transform: `rotate(${wheelRotation}deg)` }}
+                    >
+                      <Disc className="w-16 h-16 text-white opacity-80" />
+                    </div>
+                    <button 
+                      disabled={isSpinning}
+                      onClick={() => {
+                        if (isSpinning) return;
+                        setIsSpinning(true);
+                        setFeedbackMsg(null);
+                        const extra = 1440 + Math.floor(Math.random() * 360);
+                        setWheelRotation(prev => prev + extra);
+                        setTimeout(() => {
+                          setIsSpinning(false);
+                          const qIdx = Math.floor(Math.random() * activeQuizBatch.length);
+                          setCurrentQIndex(qIdx);
+                          setSelectedOption(null);
+                        }, 1500);
+                      }}
+                      className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-extrabold text-xs shadow-lg hover:scale-105 transition disabled:opacity-50"
+                    >
+                      {isSpinning ? (isAr ? 'العجلة تدور... 🎡' : 'Spinning...') : (isAr ? '🎡 أدر العجلة الآن!' : 'Spin Wheel!')}
+                    </button>
+                  </div>
+
+                  <div className="max-w-md w-full space-y-3">
+                    <h4 className="text-xs font-bold text-white bg-slate-900 p-3.5 rounded-xl border border-slate-800 shadow">
+                      {isAr ? spinQ.qAr : spinQ.qEn}
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(isAr ? spinQ.optionsAr : spinQ.optionsEn).map((opt, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            if (selectedOption !== null) return;
+                            setSelectedOption(idx);
+                            if (idx === spinQ.correct) {
+                              setScore(prev => prev + 30);
+                              setFeedbackMsg({ text: isAr ? 'إجابة مذهلة وصحيحة! 🎡🎯 (+30 نقطة) - أدر العجلة مجدداً لسؤال آخر!' : 'Correct spin answer!', type: 'success' });
+                              handleClaimXP();
+                            } else {
+                              setLives(prev => Math.max(0, prev - 1));
+                              setFeedbackMsg({ text: isAr ? `إجابة خاطئة ❌! ${spinQ.explanationAr}` : 'Incorrect answer!', type: 'error' });
+                            }
+                          }}
+                          className={`p-2.5 rounded-xl border text-[11px] font-bold text-right transition ${
+                            selectedOption !== null && idx === spinQ.correct
+                              ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
+                              : selectedOption === idx
+                              ? 'bg-rose-500/20 border-rose-400 text-rose-300'
+                              : 'bg-slate-900 border-slate-800 text-slate-200 hover:border-amber-400'
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* TEMPLATE 4: TRUE OR FALSE */}
           {selectedTemplateId === 'true_false' && (() => {

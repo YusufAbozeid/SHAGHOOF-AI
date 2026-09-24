@@ -9,8 +9,17 @@ from typing import Any, Optional
 
 import requests
 
-_BASE_STORAGE = os.path.join(os.path.dirname(__file__), "..", "..", "storage", "moodle")
-os.makedirs(_BASE_STORAGE, exist_ok=True)
+import tempfile
+
+if os.getenv("VERCEL"):
+    _BASE_STORAGE = os.path.join(tempfile.gettempdir(), "..", "..", "storage", "moodle")
+else:
+    _BASE_STORAGE = os.path.join(os.path.dirname(__file__), "..", "..", "storage", "moodle")
+
+try:
+    os.makedirs(_BASE_STORAGE, exist_ok=True)
+except Exception:
+    pass
 
 
 class MoodleSecurityException(Exception):

@@ -9,8 +9,17 @@ from ..core.config import settings
 
 logger = logging.getLogger(__name__)
 
-_BASE_VEC = os.path.join(os.path.dirname(__file__), "..", "..", "storage", "moodle_vectors")
-os.makedirs(_BASE_VEC, exist_ok=True)
+import tempfile
+
+if os.getenv("VERCEL"):
+    _BASE_VEC = os.path.join(tempfile.gettempdir(), "storage", "moodle_vectors")
+else:
+    _BASE_VEC = os.path.join(os.path.dirname(__file__), "..", "..", "storage", "moodle_vectors")
+
+try:
+    os.makedirs(_BASE_VEC, exist_ok=True)
+except Exception:
+    pass
 
 _embeddings = None
 

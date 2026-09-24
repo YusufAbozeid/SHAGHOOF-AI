@@ -4,8 +4,17 @@ import os
 from datetime import datetime
 from typing import Any
 
-STORAGE_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'storage', 'events')
-os.makedirs(STORAGE_DIR, exist_ok=True)
+import tempfile
+
+if os.getenv("VERCEL"):
+    STORAGE_DIR = os.path.join(tempfile.gettempdir(), 'storage', 'events')
+else:
+    STORAGE_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'storage', 'events')
+
+try:
+    os.makedirs(STORAGE_DIR, exist_ok=True)
+except Exception:
+    pass
 
 
 def add_event(

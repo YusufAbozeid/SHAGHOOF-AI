@@ -8,8 +8,17 @@ from urllib.parse import urlparse, urljoin
 from html.parser import HTMLParser
 
 
-STORAGE_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'storage', 'web_lessons')
-os.makedirs(STORAGE_DIR, exist_ok=True)
+import tempfile
+
+if os.getenv("VERCEL"):
+    STORAGE_DIR = os.path.join(tempfile.gettempdir(), 'storage', 'web_lessons')
+else:
+    STORAGE_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'storage', 'web_lessons')
+
+try:
+    os.makedirs(STORAGE_DIR, exist_ok=True)
+except Exception:
+    pass
 
 
 class _TextExtractor(HTMLParser):

@@ -10,8 +10,17 @@ from ..core.config import settings
 
 logger = logging.getLogger(__name__)
 
-_BASE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "storage", "pdf_rag")
-os.makedirs(_BASE_DIR, exist_ok=True)
+import tempfile
+
+if os.getenv("VERCEL"):
+    _BASE_DIR = os.path.join(tempfile.gettempdir(), "storage", "pdf_rag")
+else:
+    _BASE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "storage", "pdf_rag")
+
+try:
+    os.makedirs(_BASE_DIR, exist_ok=True)
+except Exception:
+    pass
 
 _embeddings = None
 

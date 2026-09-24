@@ -7,8 +7,17 @@ import hashlib
 logger = logging.getLogger(__name__)
 
 
-STORAGE_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'storage', 'video_lessons')
-os.makedirs(STORAGE_DIR, exist_ok=True)
+import tempfile
+
+if os.getenv("VERCEL"):
+    STORAGE_DIR = os.path.join(tempfile.gettempdir(), 'storage', 'video_lessons')
+else:
+    STORAGE_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'storage', 'video_lessons')
+
+try:
+    os.makedirs(STORAGE_DIR, exist_ok=True)
+except Exception:
+    pass
 
 
 def _template_video_shape(template_id: str, scene: dict, index: int, sen_profile: str) -> None:

@@ -64,6 +64,12 @@ def root():
 
 
 @app.get("/api/v1/health")
+@app.get("/health")
 def health():
-    from .services import gemini
-    return {"status": "ok", "ai_available": gemini.ai_available(), "version": "3.0.0"}
+    ai_ok = False
+    try:
+        from .services import gemini
+        ai_ok = gemini.ai_available()
+    except Exception:
+        ai_ok = False
+    return {"status": "ok", "ai_available": ai_ok, "version": "3.0.0"}

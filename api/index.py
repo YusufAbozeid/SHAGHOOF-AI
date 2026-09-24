@@ -1,9 +1,15 @@
-from fastapi import FastAPI
+from http.server import BaseHTTPRequestHandler
+import json
 
-app = FastAPI(title="Shaghoof Backend")
-
-@app.get("/")
-@app.get("/health")
-@app.get("/api/v1/health")
-def health():
-    return {"status": "ok", "message": "Shaghoof AI Backend is live on Vercel!"}
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps({
+            "status": "ok",
+            "message": "Shaghoof AI Backend is active on Vercel!",
+            "path": self.path
+        }).encode('utf-8'))
+        return

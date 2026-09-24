@@ -7,12 +7,15 @@ from ..core.config import settings
 
 logger = logging.getLogger(__name__)
 
+from pydantic import BaseModel, Field
+
 try:
     from langchain_core.messages import HumanMessage, SystemMessage
     from langchain_groq import ChatGroq
     from langgraph.graph import END, START, StateGraph
-    from pydantic import BaseModel, Field
 except ImportError:
+    HumanMessage = None
+    SystemMessage = None
     ChatGroq = None  # type: ignore[assignment,misc]
     StateGraph = None  # type: ignore[assignment,misc]
 

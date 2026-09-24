@@ -9,7 +9,7 @@ import { TutorChat } from '../chat/TutorChat';
 import { TopicSelectorModal } from '../../components/TopicSelectorModal';
 import { ProactiveAgentBanner } from '../agent/ProactiveAgentBanner';
 import { ProactiveRescueModal } from '../agent/ProactiveRescueModal';
-import { ChevronRight, ChevronLeft, RefreshCw, BookOpen, Sparkles, FileUp, GraduationCap } from 'lucide-react';
+import { ChevronRight, ChevronLeft, RefreshCw, BookOpen, Sparkles, FileUp, GraduationCap, Hand } from 'lucide-react';
 
 interface LessonPlayerLayoutProps {
   onOpenVARK: () => void;
@@ -33,7 +33,8 @@ export const LessonPlayerLayout: React.FC<LessonPlayerLayoutProps> = ({ onOpenVA
     language,
     themeMode,
     isRescueModalOpen,
-    setIsRescueModalOpen
+    setIsRescueModalOpen,
+    setSignLanguageModalOpen
   } = useStore();
 
   const isAr = language === 'ar';
@@ -85,8 +86,8 @@ export const LessonPlayerLayout: React.FC<LessonPlayerLayoutProps> = ({ onOpenVA
               </div>
             </div>
 
-            {/* 3 Interactive Onboarding Pathway Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* 4 Interactive Onboarding Pathway Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
               {/* Card 1: Curriculum Hub */}
               <div 
@@ -177,6 +178,37 @@ export const LessonPlayerLayout: React.FC<LessonPlayerLayoutProps> = ({ onOpenVA
 
                 <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-emerald-600 dark:text-emerald-400 font-extrabold text-xs">
                   <span>{isAr ? 'ربط Moodle 🎓' : 'Sync Moodle 🎓'}</span>
+                  {isAr ? <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> : <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
+                </div>
+              </div>
+
+              {/* Card 4: 3D Sign Language Engine (ArSL) */}
+              <div 
+                onClick={() => setSignLanguageModalOpen(true)}
+                className={`p-5 rounded-3xl border cursor-pointer group hover:scale-[1.02] transition-all flex flex-col justify-between shadow-sm hover:shadow-xl ${
+                  isDark 
+                    ? 'bg-slate-900/80 border-slate-800 hover:border-purple-500/60 hover:bg-slate-900' 
+                    : 'bg-white border-slate-200 hover:border-purple-400 hover:shadow-purple-100/50'
+                }`}
+              >
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-500/15 text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Hand className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-900 dark:text-white group-hover:text-purple-400 transition">
+                      {isAr ? 'مترجم لغة الإشارة 3D' : '3D Sign Language'}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                      {isAr 
+                        ? 'أفاتار ثلاثي الأبعاد بمفاصل وأصابع متحركة لترجمة أي درس أو نص عربي للغة الإشارة فورياً.' 
+                        : 'Interactive 3D avatar with articulated fingers translating any Arabic lesson into Sign Language.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-purple-500 dark:text-purple-400 font-extrabold text-xs">
+                  <span>{isAr ? 'تجربة الأفاتار 🤟' : 'Launch 3D Avatar 🤟'}</span>
                   {isAr ? <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> : <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
                 </div>
               </div>

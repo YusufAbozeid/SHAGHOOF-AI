@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from './store/useStore';
 import { Navbar } from './components/Navbar';
 import { AccessibilityToolbar } from './components/AccessibilityToolbar';
@@ -28,7 +28,7 @@ import { KnowledgeGraphModal } from './modules/championship/KnowledgeGraphModal'
 import { ReverseFeynmanModal } from './modules/championship/ReverseFeynmanModal';
 import { SDGImpactModal } from './modules/championship/SDGImpactModal';
 
-import { GraduationCap, CheckCircle2, Users, BookOpen, X } from 'lucide-react';
+import { GraduationCap, CheckCircle2, Users, BookOpen, X, Hand } from 'lucide-react';
 
 const BackgroundDecoration = () => (
   <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none" aria-hidden="true">
@@ -42,7 +42,7 @@ const BackgroundDecoration = () => (
 );
 
 export function App() {
-  const { authStep, setAuthStep, user, colorBlindMode, openDyslexicEnabled } = useStore();
+  const { authStep, setAuthStep, user, colorBlindMode, openDyslexicEnabled, setSignLanguageModalOpen } = useStore();
 
   const [isAccessibilityOpen, setIsAccessibilityOpen] = useState(false);
   const [isVARKOpen, setIsVARKOpen] = useState(false);
@@ -63,6 +63,14 @@ export function App() {
   const [isKnowledgeGraphOpen, setIsKnowledgeGraphOpen] = useState(false);
   const [isFeynmanOpen, setIsFeynmanOpen] = useState(false);
   const [isSDGOpen, setIsSDGOpen] = useState(false);
+
+  // Auto-open Sign Language if queried in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view') === 'sign-language' || params.get('signLanguage') === 'true') {
+      setSignLanguageModalOpen(true);
+    }
+  }, [setSignLanguageModalOpen]);
 
   // Compute CSS filter for Color Blindness & High Contrast accommodations
   let containerFilter = '';
@@ -183,6 +191,15 @@ export function App() {
             >
               <Users className="w-3.5 h-3.5" />
               <span>Teacher Roster (Dev D)</span>
+            </button>
+
+            <button
+              onClick={() => setSignLanguageModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-300 text-xs font-bold hover:bg-purple-500/30 transition shadow-sm"
+              title="فتح محرك لغة الإشارة 3D التفاعلي"
+            >
+              <Hand className="w-3.5 h-3.5 text-purple-400" />
+              <span>مترجم الإشارة 3D (ArSL)</span>
             </button>
 
             <button

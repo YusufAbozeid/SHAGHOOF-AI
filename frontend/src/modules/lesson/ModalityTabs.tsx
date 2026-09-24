@@ -1,10 +1,10 @@
 import React from 'react';
 import { useStore } from '../../store/useStore';
 import type { Modality } from '../../store/useStore';
-import { Eye, Headphones, BookOpen, Sliders, Sparkles } from 'lucide-react';
+import { Eye, Headphones, BookOpen, Sliders, Sparkles, Hand } from 'lucide-react';
 
 export const ModalityTabs: React.FC = () => {
-  const { activeModality, setActiveModality, varkScores, addXP, language } = useStore();
+  const { activeModality, setActiveModality, varkScores, addXP, language, setSignLanguageModalOpen } = useStore();
   const isAr = language === 'ar';
 
   const tabs: { id: Modality; label: string; icon: React.FC<{ className?: string }>; score: number }[] = [
@@ -59,6 +59,17 @@ export const ModalityTabs: React.FC = () => {
           </button>
         );
       })}
+
+      {/* 3D Sign Language (ArSL) Companion Button */}
+      <button
+        type="button"
+        onClick={() => setSignLanguageModalOpen(true)}
+        className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all relative shrink-0 whitespace-nowrap bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border-purple-500/30 hover:border-purple-400 shadow-sm"
+        title={isAr ? "فتح مترجم لغة الإشارة 3D التفاعلي" : "Open 3D Sign Language Presenter"}
+      >
+        <Hand className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+        <span>{isAr ? 'لغة الإشارة 🤟' : 'Sign Language 🤟'}</span>
+      </button>
     </div>
   );
 };

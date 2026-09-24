@@ -22,7 +22,8 @@ import {
   Network,
   ShieldCheck,
   BrainCircuit,
-  Globe2
+  Globe2,
+  Hand
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -59,7 +60,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     themeMode,
     toggleThemeMode,
     user,
-    logout
+    logout,
+    setSignLanguageModalOpen
   } = useStore();
 
   const isAr = language === 'ar';
@@ -424,6 +426,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Leaf className="w-3.5 h-3.5 shrink-0" />
             <span>
               {sensoryLabel}
+            </span>
+          </button>
+
+          {/* Direct Sign Language 3D Avatar Button */}
+          <button
+            type="button"
+            onClick={() => setSignLanguageModalOpen(true)}
+            aria-label="Open 3D Arabic Sign Language Avatar"
+            className="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-md shadow-purple-500/20 shrink-0 whitespace-nowrap"
+          >
+            <Hand className="w-4 h-4 shrink-0 text-purple-200" />
+            <span>
+              {isAr ? 'لغة الإشارة 3D 🤟' : 'Sign Language 3D 🤟'}
             </span>
           </button>
 

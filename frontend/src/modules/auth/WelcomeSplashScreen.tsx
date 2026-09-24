@@ -1,14 +1,14 @@
 import React from 'react';
 import { useStore } from '../../store/useStore';
 import logoImg from '../../assets/logo.png';
-import { GraduationCap, ArrowLeft, Brain, Layers, Globe, Sun, Moon, Sliders, MessageSquare } from 'lucide-react';
+import { GraduationCap, ArrowLeft, Brain, Layers, Globe, Sun, Moon, Sliders, MessageSquare, Hand } from 'lucide-react';
 
 interface WelcomeSplashScreenProps {
   onProceedToLogin: () => void;
 }
 
 export const WelcomeSplashScreen: React.FC<WelcomeSplashScreenProps> = ({ onProceedToLogin }) => {
-  const { language, themeMode, setLanguage, toggleThemeMode } = useStore();
+  const { language, themeMode, setLanguage, toggleThemeMode, setSignLanguageModalOpen } = useStore();
   const isAr = language === 'ar';
   const isDark = themeMode === 'dark';
 
@@ -116,15 +116,24 @@ export const WelcomeSplashScreen: React.FC<WelcomeSplashScreenProps> = ({ onProc
           })}
         </div>
 
-        {/* Clean Balanced Get Started Button */}
-        <div className="pt-4 flex justify-center">
+        {/* Clean Balanced Actions */}
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             type="button"
             onClick={onProceedToLogin}
-            className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-[#FF4D2D] hover:bg-[#E03E1C] text-white font-extrabold text-sm sm:text-base hover:scale-105 transition-all shadow-xl shadow-[#FF4D2D]/20"
+            className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-[#FF4D2D] hover:bg-[#E03E1C] text-white font-extrabold text-sm sm:text-base hover:scale-105 transition-all shadow-xl shadow-[#FF4D2D]/20 w-full sm:w-auto"
           >
             <span>{isAr ? 'ابدأ رحلة التعلم الذكية' : 'Start Learning Journey'}</span>
             <ArrowLeft className={`w-5 h-5 transition-transform ${isAr ? 'group-hover:-translate-x-1' : 'rotate-180 group-hover:translate-x-1'}`} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSignLanguageModalOpen(true)}
+            className="group relative inline-flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-sm sm:text-base hover:scale-105 transition-all shadow-xl shadow-purple-500/20 w-full sm:w-auto"
+          >
+            <Hand className="w-5 h-5 text-purple-200" />
+            <span>{isAr ? 'مترجم لغة الإشارة 3D 🤟' : 'Sign Language 3D 🤟'}</span>
           </button>
         </div>
 
@@ -132,7 +141,7 @@ export const WelcomeSplashScreen: React.FC<WelcomeSplashScreenProps> = ({ onProc
 
       {/* Footer */}
       <footer className="relative z-10 max-w-7xl mx-auto w-full text-center text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700 pt-4">
-        <span>© 2026 SHAGHOOF AI • YusufAbozeid / EduMind-AI</span>
+        <span>© 2026 SHAGHOOF AI • Academic AI Learning Platform</span>
       </footer>
 
     </div>

@@ -1,19 +1,25 @@
-"""
-Vercel Serverless Entry Point for SHAGHOOF AI Backend.
-Exposes the FastAPI app to Vercel's Python runtime.
-"""
 import sys
 import os
 
-api_dir = os.path.dirname(os.path.abspath(__file__))
-backend_dir = os.path.dirname(api_dir)
-root_dir = os.path.dirname(backend_dir)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+root_dir = parent_dir if os.path.basename(parent_dir) != 'backend' else os.path.dirname(parent_dir)
+backend_dir = os.path.join(root_dir, 'backend')
 
-if backend_dir not in sys.path:
-    sys.path.insert(0, backend_dir)
-if root_dir not in sys.path:
-    sys.path.insert(0, root_dir)
+for path in [root_dir, backend_dir]:
+    if path not in sys.path and os.path.exists(path):
+        sys.path.insert(0, path)
 
-from app.main import app
+try:
+    from app.main import app
+except Exception:
+    try:
+        from backend.app.main import app
+    except Exception as e:
+        from fastapi import FastAPI
+        app = FastAPI()
+        @app.get("/{full_path:path}")
+        def err(full_path: str = ""):
+            return {"status": "error", "message": str(e)}
 
 app = app

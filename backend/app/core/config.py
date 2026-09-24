@@ -13,8 +13,13 @@ load_dotenv()
 class Settings(BaseSettings):
     PROJECT_NAME: str = "SHAGHOOF AI Enterprise Platform"
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "shaghoof-super-secret-production-key-2026-v2")
+    SECRET_KEY: str = os.getenv("APP_SECRET_KEY", os.getenv("SECRET_KEY", "shaghoof-super-secret-production-key-2026-v2"))
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 Days
+
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    risk_threshold: int = 40
     
     # CORS Origins (Scoped for Production Security)
     # Reads ALLOWED_ORIGINS env var (comma-separated) and merges with defaults

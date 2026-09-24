@@ -11,8 +11,17 @@ import time
 from pathlib import Path
 from datetime import datetime
 
-DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+import tempfile
+
+if os.getenv("VERCEL"):
+    DATA_DIR = Path(tempfile.gettempdir()) / "data"
+else:
+    DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+
+try:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
 
 # RLock: ensure()/update() call load() and save() nested under the same lock.
 _lock = threading.RLock()

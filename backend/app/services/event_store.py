@@ -59,7 +59,10 @@ def get_events(user_id: str) -> list[dict]:
 
 
 def get_events_dataframe(user_id: str):
-    import pandas as pd
+    try:
+        import pandas as pd
+    except ImportError:
+        return None
     events = get_events(user_id)
     if not events:
         return pd.DataFrame(columns=['event_type', 'topic', 'score', 'total', 'difficulty', 'payload', 'timestamp'])

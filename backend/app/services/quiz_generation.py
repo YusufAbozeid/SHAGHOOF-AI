@@ -115,7 +115,7 @@ _CACHE: dict = {}
 def _get_model(api_key: str):
     if api_key in _CACHE:
         return _CACHE[api_key]
-    model_name = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    model_name = getattr(settings, "GROQ_MODEL", None) or os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
     base = ChatGroq(model=model_name, temperature=0.7, max_tokens=2048,
                     model_kwargs={"top_p": 0.95}, api_key=api_key)
     structured = base.with_structured_output(_QuizResponse)
@@ -544,7 +544,35 @@ def generate_quiz(
                 out = _mixed_fallback(topic, n, difficulty, qtype_plan)
             return out[:n], adaptation_out
         except Exception as exc:
-            logger.warning("Quiz generation via Groq failed, trying Gemini: %s", exc)
+            logger.warning("Quiz generation via Groq failed, trying unified LLM: %s", exc)
+            try:
+                from . import llm
+                p = f"""Create {n} multiple choice quiz questions for: '{topic}'.
+Difficulty: {difficulty}.
+Return JSON strictly:
+{{"questions": [{{"question": "...", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "..."}}]}}"""
+                raw = llm.chat_generate(p, system="You return JSON only.", temperature=0.3, max_tokens=2000, json_mode=True)
+                if raw:
+                    data = llm.safe_parse_json(raw)
+                    qs = (data.get("questions") if isinstance(data, dict) else data) or []
+                    if isinstance(qs, list) and len(qs) > 0:
+                        out = []
+                        for q in qs[:n]:
+                            opts = q.get("options") or ["True", "False"]
+                            ci = q.get("correct", q.get("correct_index", 0))
+                            out.append({
+                                "question": str(q.get("question", topic)),
+                                "options": [str(o) for o in opts],
+                                "correct": int(ci) if isinstance(ci, int) and 0 <= ci < len(opts) else 0,
+                                "type": "mcq",
+                                "difficulty": difficulty,
+                                "explanation": str(q.get("explanation", ""))
+                            })
+                        if out:
+                            return out[:n], adaptation_out
+            except Exception as e2:
+                logger.warning("Unified LLM quiz fallback failed: %s", e2)
+
             gemini_qs = _gemini_quiz(topic, n, difficulty, subject, adapt_rule, context_text, avoid_section)
             if gemini_qs:
                 typed = []

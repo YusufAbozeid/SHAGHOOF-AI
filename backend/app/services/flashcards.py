@@ -39,25 +39,19 @@ CRITICAL: Interpret topics strictly within AI / Computer Science / Software Engi
 Return JSON: {{"cards": [{{"front": "...", "back": "..."}}, ...]}}
 """
     try:
-        client = Groq(api_key=key)
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": (
-                    "You are an expert CS/AI tutor. Always interpret topics "
-                    "within software engineering / AI / CS context. Respond only with valid JSON."
-                )},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.1,
-            response_format={"type": "json_object"},
-            max_tokens=2000,
+        from . import llm
+        system = (
+            "You are an expert educational tutor. "
+            "Respond strictly with valid JSON in this format: "
+            '{"cards": [{"front": "question/term", "back": "answer/definition"}]}'
         )
-        raw = response.choices[0].message.content or "{}"
-        data = json.loads(raw)
-        cards = [c for c in data.get("cards", [])
-                 if isinstance(c, dict) and "front" in c and "back" in c]
-        return cards[:n] if cards else [{"front": topic, "back": f"Key concept: {topic}."}]
+        raw = llm.chat_generate(prompt, system=system, temperature=0.2, max_tokens=2000, json_mode=True)
+        if raw:
+            data = llm.safe_parse_json(raw) or {}
+            cards = [c for c in data.get("cards", []) if isinstance(c, dict) and "front" in c and "back" in c]
+            if cards:
+                return cards[:n]
     except Exception as exc:
-        logger.warning("Flashcard generation failed: %s", exc)
-        return [{"front": topic, "back": f"Study material for {topic}."}]
+        logger.warning("Unified LLM flashcard generation failed: %s", exc)
+
+    return [{"front": topic, "back": f"Study material and key concepts for {topic}."}]

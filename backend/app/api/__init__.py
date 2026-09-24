@@ -11,16 +11,24 @@ api_router.include_router(profile.router)
 api_router.include_router(retention.router)
 api_router.include_router(teacher.router)
 
-# New routers from SHAGHOOF-AI integration
-# (podcast routes live in championship.py — rate-limited TTS + generate)
-api_router.include_router(tutor.router)
-api_router.include_router(quiz_gen.router)
-api_router.include_router(flashcards.router)
-api_router.include_router(assignments.router)
-api_router.include_router(moodle.router)
-api_router.include_router(pdf_chat.router)
-api_router.include_router(lessons.router)
-api_router.include_router(video_lesson.router)
-api_router.include_router(personalization.router)
+# Routers from SHAGHOOF-AI integration
+# Mounted under both root (e.g. /chat/tutor) and /api/v1 (e.g. /api/v1/chat/tutor)
+# so frontend calls work seamlessly with any API base configuration.
+_additional_routers = [
+    tutor.router,
+    quiz_gen.router,
+    flashcards.router,
+    assignments.router,
+    moodle.router,
+    pdf_chat.router,
+    lessons.router,
+    video_lesson.router,
+    personalization.router,
+    championship.router,
+]
+
+for r in _additional_routers:
+    api_router.include_router(r)
+    api_router.include_router(r, prefix="/api/v1")
+
 api_router.include_router(wordwall_embed.router)
-api_router.include_router(championship.router)

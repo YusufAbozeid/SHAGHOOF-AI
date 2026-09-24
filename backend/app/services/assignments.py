@@ -117,20 +117,45 @@ def generate_assignment(
     count = max(1, min(count, 20))
 
     key = api_key or settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY", "")
-    if not key or ChatGroq is None or StateGraph is None:
-        return f"Assignment for {topic} — AI service unavailable. Please configure GROQ_API_KEY."
+    if ChatGroq is not None and StateGraph is not None and key:
+        try:
+            model = ChatGroq(api_key=key, model=getattr(settings, "GROQ_MODEL", "qwen/qwen3.8-27b"),
+                             temperature=0.2, timeout=60, max_retries=2)
+            graph = _build_graph(model, key)
+            result = graph.invoke({
+                "topic": topic, "source_data": source, "student_level": student_level,
+                "assignment_type": assignment_type, "difficulty": difficulty.title(),
+                "number_of_questions": count, "draft_assignment": "",
+                "review_feedback": "", "approved": False, "final_assignment": "",
+            })
+            res = (result.get("final_assignment") or result.get("draft_assignment") or "").strip()
+            if res:
+                return res
+        except Exception as exc:
+            logger.warning("LangGraph assignment generation failed: %s, falling back to direct LLM", exc)
 
+    # Direct LLM generation fallback (works without langgraph)
     try:
-        model = ChatGroq(api_key=key, model="llama-3.3-70b-versatile",
-                         temperature=0.2, timeout=60, max_retries=2)
-        graph = _build_graph(model, key)
-        result = graph.invoke({
-            "topic": topic, "source_data": source, "student_level": student_level,
-            "assignment_type": assignment_type, "difficulty": difficulty.title(),
-            "number_of_questions": count, "draft_assignment": "",
-            "review_feedback": "", "approved": False, "final_assignment": "",
-        })
-        return (result.get("final_assignment") or result.get("draft_assignment") or "").strip()
+        from . import llm
+        prompt = f"""Create a comprehensive, academic assignment based on the topic and source data.
+
+TOPIC: {topic}
+SOURCE MATERIAL: {source or 'Standard curriculum for this topic'}
+LEVEL: {student_level}
+TYPE: {assignment_type}
+DIFFICULTY: {difficulty}
+
+Include:
+- Assignment Title & Instructions
+- Exactly {count} numbered questions with assigned marks
+- Total marks
+- Short grading rubric
+"""
+        system = "You are a senior university professor and curriculum specialist. Design challenging, well-structured student assignments."
+        res = llm.chat_generate(prompt, system=system, temperature=0.3, max_tokens=1500)
+        if res:
+            return res.strip()
     except Exception as exc:
-        logger.warning("Assignment generation failed: %s", exc)
-        return f"Assignment for {topic} — generation failed: {exc}"
+        logger.warning("Direct LLM assignment generation failed: %s", exc)
+
+    return f"Assignment for {topic} — AI service unavailable."

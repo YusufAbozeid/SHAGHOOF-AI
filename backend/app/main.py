@@ -66,10 +66,9 @@ def root():
 @app.get("/api/v1/health")
 @app.get("/health")
 def health():
-    ai_ok = False
     try:
-        from .services import gemini
-        ai_ok = gemini.ai_available()
-    except Exception:
-        ai_ok = False
-    return {"status": "ok", "ai_available": ai_ok, "version": "3.0.0"}
+        from .services import llm
+        status = llm.get_providers_status()
+        return {"status": "ok", "version": "3.0.0", **status}
+    except Exception as exc:
+        return {"status": "ok", "ai_available": False, "version": "3.0.0", "error": str(exc)}

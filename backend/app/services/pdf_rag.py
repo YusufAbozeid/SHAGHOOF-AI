@@ -120,17 +120,26 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> tuple[str, int]:
     return text, len(reader.pages)
 
 
+def _split_text(text: str, chunk_size: int = 1000, chunk_overlap: int = 200) -> list[str]:
+    try:
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
+        return RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap).split_text(text)
+    except Exception:
+        chunks = []
+        start = 0
+        step = max(1, chunk_size - chunk_overlap)
+        while start < len(text):
+            chunks.append(text[start:start + chunk_size])
+            start += step
+        return chunks
+
+
 def process_and_index(pdf_bytes: bytes, filename: str, user_id: str = "default") -> dict[str, Any]:
-    from langchain_text_splitters import RecursiveCharacterTextSplitter
     raw_id = f"{user_id}_{uuid.uuid4().hex[:10]}"
-    # Canonicalize BEFORE returning: _session_dir stores under the sanitized
-    # form, so the id we hand back to the browser must be the same one or
-    # every later generate/pdf-chat call fails with "session not found".
     session_id = re.sub(r'[^a-zA-Z0-9_\-]', '_', raw_id.strip())
     text, page_count = extract_text_from_pdf(pdf_bytes)
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    chunks = splitter.split_text(text)
+    chunks = _split_text(text, chunk_size=1000, chunk_overlap=200)
     if not chunks:
         return {"session_id": session_id, "filename": filename, "page_count": page_count, "chunk_count": 0}
 
@@ -193,26 +202,19 @@ def query_rag(
     sources = [{"filename": c["metadata"].get("filename", "?"), "chunk": c["metadata"].get("chunk_index", 0),
                 "preview": c["text"][:120] + "..."} for c in matched]
 
-    groq_key = settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY")
-    if groq_key:
-        try:
-            from langchain_groq import ChatGroq
-            llm = ChatGroq(groq_api_key=groq_key, model_name=os.getenv("GROQ_MODEL", "llama-3.1-8b-instant"), temperature=0.2)
-            messages = [
-                ("system", (
-                    "You are an expert AI tutor. Answer strictly based on the provided PDF context. "
-                    "Respond in the same language as the student's question. "
-                    "Provide comprehensive, well-structured explanations."
-                )),
-                ("user", f"PDF Context:\n{context}\n\nQuestion:\n{query}"),
-            ]
-            if history:
-                for h in history[-6:]:
-                    messages = list(messages[:-1]) + [(h.get("role", "user"), h.get("content", ""))] + [messages[-1]]
-            resp = llm.invoke(messages)
-            return {"answer": resp.content.strip(), "sources": sources}
-        except Exception as e:
-            logger.warning("RAG LLM failed: %s", e)
+    try:
+        from . import llm
+        system = (
+            "You are an expert AI tutor. Answer strictly based on the provided PDF context. "
+            "Respond in the same language as the student's question. "
+            "Provide comprehensive, well-structured explanations."
+        )
+        prompt = f"PDF Context:\n{context}\n\nQuestion:\n{query}"
+        resp_text = llm.chat_generate(prompt, system=system, temperature=0.2, is_arabic=(language == "ar"))
+        if resp_text:
+            return {"answer": resp_text.strip(), "sources": sources}
+    except Exception as e:
+        logger.warning("RAG LLM failed: %s", e)
 
     primary = matched[0]["text"]
     return {"answer": f"Based on the uploaded material:\n\n{primary}", "sources": sources}

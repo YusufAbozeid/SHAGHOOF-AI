@@ -7,11 +7,58 @@
       "config": {
         "maxLambdaSize": "50mb"
       }
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
+      "dest": "backend/api/index.py"
+    },
+    {
+      "src": "/chat/(.*)",
+      "dest": "backend/api/index.py"
+    },
+    {
+      "src": "/quiz/(.*)",
+      "dest": "backend/api/index.py"
+    },
+    {
+      "src": "/flashcards/(.*)",
+      "dest": "backend/api/index.py"
+    },
+    {
+      "src": "/assignments/(.*)",
+      "dest": "backend/api/index.py"
+    },
+    {
+      "src": "/pdf/(.*)",
+      "dest": "backend/api/index.py"
+    },
+    {
+      "src": "/moodle/(.*)",
+      "dest": "backend/api/index.py"
+    },
+    {
+      "src": "/lessons/(.*)",
+      "dest": "backend/api/index.py"
+    },
+    {
+      "src": "/video/(.*)",
+      "dest": "backend/api/index.py"
+    },
+    {
+      "src": "/personalization/(.*)",
+      "dest": "backend/api/index.py"
+    },
+    {
+      "src": "/championship/(.*)",
       "dest": "backend/api/index.py"
     },
     {
@@ -29,6 +76,13 @@
     {
       "src": "/openapi.json",
       "dest": "backend/api/index.py"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }

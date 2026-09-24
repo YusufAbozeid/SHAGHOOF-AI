@@ -197,8 +197,7 @@ def _groq_lesson(raw_text: str, title: str, topic: str, source_type: str,
         return _template_postprocess(base, vark_mode, sen_profile, template_id)
 
     try:
-        model_name = _os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-        llm = ChatGroq(groq_api_key=api_key, model_name=model_name, temperature=0.3)
+        from . import llm
         truncated = raw_text[:6000]
         template_rule = TEMPLATE_DIRECTIVES.get(template_id, TEMPLATE_DIRECTIVES['T3'])
         vark_rule = VARK_DIRECTIVES.get(vark_mode, VARK_DIRECTIVES['visual'])
@@ -241,20 +240,19 @@ Rules:
 - Add 2-4 learning objectives
 - Add 3-5 vocabulary terms if applicable
 - Return ONLY valid JSON, no markdown fences"""
-        response = llm.invoke([("system", "You return JSON only."), ("user", prompt)])
-        text = response.content.strip()
-        text = re.sub(r'^```json\s*', '', text)
-        text = re.sub(r'\s*```$', '', text)
-        parsed = json.loads(text)
-        parsed.setdefault('title', title)
-        parsed.setdefault('summary', '')
-        parsed.setdefault('sections', [])
-        parsed.setdefault('key_concepts', [])
-        parsed.setdefault('learning_objectives', [])
-        parsed.setdefault('vocabulary', [])
-        return _template_postprocess(parsed, vark_mode, sen_profile, template_id)
+        raw_out = llm.chat_generate(prompt, system="You return JSON only.", temperature=0.3, max_tokens=2048, json_mode=True)
+        if raw_out:
+            parsed = llm.safe_parse_json(raw_out)
+            if isinstance(parsed, dict):
+                parsed.setdefault('title', title)
+                parsed.setdefault('summary', '')
+                parsed.setdefault('sections', [])
+                parsed.setdefault('key_concepts', [])
+                parsed.setdefault('learning_objectives', [])
+                parsed.setdefault('vocabulary', [])
+                return _template_postprocess(parsed, vark_mode, sen_profile, template_id)
     except Exception as e:
-        logger.warning("Groq lesson generation failed, trying Gemini: %s", e)
+        logger.warning("Unified LLM lesson generation failed, trying Gemini: %s", e)
         gem = _gemini_lesson(raw_text, title, topic, source_type, vark_mode, sen_profile, template_id)
         if gem:
             return gem

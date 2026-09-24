@@ -44,60 +44,29 @@ except ImportError:
 
 
 def _llm_generate(prompt: str, system: str = "", grounding_mode: str = "general") -> str | None:
-    """Try Groq first, then Gemini. Returns None when no provider is usable.
-
-    grounding_mode="strict" forbids the model from answering anything outside
-    the provided lesson material (used when a specific lesson is open).
-    """
-    groq_key = settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY", "")
-    if groq_key and ChatGroq is not None:
-        try:
-            model_name = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-            model = ChatGroq(model=model_name, temperature=0.4, max_tokens=1024, api_key=groq_key)
-            messages = []
-            if system:
-                messages.append(("system", system))
-            messages.append(("human", prompt))
-            return model.invoke(messages).content.strip()
-        except Exception as exc:
-            logger.warning("Groq tutor call failed: %s", exc)
+    """Try Groq first, then OpenAI, then Gemini. Returns None when no provider is usable."""
     try:
-        from . import gemini
-        if gemini.ai_available():
-            out = gemini._generate((f"{system}\n\n" if system else "") + prompt)
-            if out:
-                return out.strip()
+        from . import llm
+        return llm.chat_generate(prompt, system=system, temperature=0.4, max_tokens=1024)
     except Exception as exc:
-        logger.debug("Gemini tutor fallback failed: %s", exc)
-    return None
+        logger.warning("LLM tutor call failed: %s", exc)
+        return None
 
 
 def _llm_generate_ar(prompt: str, system: str = "") -> str | None:
-    """Generate Arabic content with a short, focused system prompt.
-
-    Used as a retry when the first LLM call returned English despite an Arabic
-    language request.  The system prompt is intentionally short and explicit to
-    maximise compliance from small models like llama-3.1-8b-instant.
-    """
-    groq_key = settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY", "")
-    if groq_key and ChatGroq is not None:
-        try:
-            model_name = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-            model = ChatGroq(model=model_name, temperature=0.4, max_tokens=1024, api_key=groq_key)
-            # Short, focused Arabic-only prompt
-            ar_system = (
-                "أنت مدرس خبير على منصة شغف. أجب بالعامية المصرية فقط. "
-                "لا تستخدم الإنجليزية إلا للمصطلحات التقنية. "
-                "اجعل الإجابة مختصرة وواضحة."
-            )
-            messages = [("system", ar_system)]
-            if system:
-                messages.append(("system", system))
-            messages.append(("human", prompt))
-            return model.invoke(messages).content.strip()
-        except Exception as exc:
-            logger.warning("Groq Arabic retry failed: %s", exc)
-    return None
+    """Generate Arabic content with a short, focused system prompt."""
+    ar_system = (
+        "أنت مدرس خبير على منصة شغف. أجب بالعامية المصرية فقط. "
+        "لا تستخدم الإنجليزية إلا للمصطلحات التقنية. "
+        "اجعل الإجابة مختصرة وواضحة."
+    )
+    try:
+        from . import llm
+        full_sys = f"{ar_system}\n{system}" if system else ar_system
+        return llm.chat_generate(prompt, system=full_sys, temperature=0.4, max_tokens=1024, is_arabic=True)
+    except Exception as exc:
+        logger.warning("LLM Arabic retry failed: %s", exc)
+        return None
 
 
 _SYSTEM_PROMPT = """\

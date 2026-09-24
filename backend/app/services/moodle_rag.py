@@ -80,12 +80,24 @@ def extract_text_by_pages(pdf_path: str) -> list[tuple[int, str]]:
     return pages
 
 
+def _split_text(text: str, chunk_size: int = 800, chunk_overlap: int = 150) -> list[str]:
+    try:
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
+        return RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap).split_text(text)
+    except Exception:
+        chunks = []
+        start = 0
+        step = max(1, chunk_size - chunk_overlap)
+        while start < len(text):
+            chunks.append(text[start:start + chunk_size])
+            start += step
+        return chunks
+
+
 def chunk_document(pages: list[tuple[int, str]], metadata_base: dict, chunk_size: int = 800, overlap: int = 150) -> list[dict]:
-    from langchain_text_splitters import RecursiveCharacterTextSplitter
-    splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=overlap)
     chunks = []
     for page_num, content in pages:
-        for idx, split in enumerate(splitter.split_text(content)):
+        for idx, split in enumerate(_split_text(content, chunk_size=chunk_size, chunk_overlap=overlap)):
             meta = dict(metadata_base)
             meta["page_number"] = page_num
             meta["chunk_id"] = f"{metadata_base.get('moodle_file_id', 'f')}_p{page_num}_c{idx}"
@@ -193,17 +205,16 @@ def _generate_answer(query: str, chunks: list, citations: list, language: str = 
     ])
     cit_summary = "\n".join([f"- [{c['course_name']}, {c['filename']}, p{c['page_number']}]" for c in citations])
 
-    groq_key = settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY")
-    if groq_key:
-        try:
-            from langchain_groq import ChatGroq
-            llm = ChatGroq(groq_api_key=groq_key, model_name=os.getenv("GROQ_MODEL", "llama-3.1-8b-instant"), temperature=0.2)
-            sys_prompt = ("You are an academic AI tutor. Answer strictly from the provided Moodle course documents. "
-                          "Include citations at the end with course, file, and page number.")
-            resp = llm.invoke([("system", sys_prompt), ("user", f"Moodle Context:\n{context}\n\nQuestion:\n{query}")])
-            return resp.content.strip()
-        except Exception:
-            pass
+    try:
+        from . import llm
+        sys_prompt = ("You are an academic AI tutor. Answer strictly from the provided Moodle course documents. "
+                      "Include citations at the end with course, file, and page number.")
+        prompt = f"Moodle Context:\n{context}\n\nQuestion:\n{query}"
+        resp_text = llm.chat_generate(prompt, system=sys_prompt, temperature=0.2, is_arabic=(language == "ar"))
+        if resp_text:
+            return resp_text.strip()
+    except Exception:
+        pass
     primary = chunks[0]["text"]
     label = "المصادر المعتمدة" if language == "ar" else "Referenced Sources"
     return f"Based on course materials:\n\n{primary}\n\n**{label}:**\n{cit_summary}"

@@ -32,3 +32,13 @@ dist-ssr
 *.zip
 *.7z
 *.rar
+
+# Python & Databases
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+*.db
+.vite/
+backend/storage/
+edumind/

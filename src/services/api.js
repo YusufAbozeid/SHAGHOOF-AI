@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+let rawBase = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:8080')
+rawBase = (rawBase || '').replace(/\/+$/, '').replace(/\/api\/v1$/, '')
+export const API_BASE = rawBase
 
 async function request(path, { method = 'GET', body, params, isFormData } = {}) {
   let url = `${API_BASE}${path}`

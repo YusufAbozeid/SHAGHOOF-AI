@@ -1,4 +1,13 @@
-let rawBase = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:8080')
+let rawBase = import.meta.env.VITE_API_URL
+if (!rawBase) {
+  if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+    rawBase = ''
+  } else if (import.meta.env.PROD) {
+    rawBase = 'https://shaghoof-ai.vercel.app'
+  } else {
+    rawBase = 'http://localhost:8080'
+  }
+}
 rawBase = (rawBase || '').replace(/\/+$/, '').replace(/\/api\/v1$/, '')
 export const API_BASE = rawBase
 

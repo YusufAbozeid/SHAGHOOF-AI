@@ -3,7 +3,6 @@
   "name": "shaghoof-ai",
   "compatibility_date": "2024-09-23",
   "assets": {
-    "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "directory": "./dist"
   }
 }

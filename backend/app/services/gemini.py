@@ -189,16 +189,31 @@ def _quiz_format_extra(template_id, quiz_format):
 
 
 def generate_questions(topic, age, style="reading", count=4, difficulty="medium", language="en", subject=None, template_id=None, quiz_format=None):
-    """Generate questions via Gemini; fall back to template questions."""
+    """Generate questions via Gemini; fall back to unified LLM (Groq), then template questions."""
     extra = _quiz_format_extra(template_id, quiz_format)
+    prompt_str = _prompt_generate(topic, age, style, count, difficulty, language, subject, extra)
     if ai_available():
         try:
-            text = _generate(_prompt_generate(topic, age, style, count, difficulty, language, subject, extra))
+            text = _generate(prompt_str)
             data = safe_parse_json(text)
             if data and isinstance(data, list) and len(data) >= count and _questions_are_usable(data[:count], topic, age, subject):
                 return data[:count]
         except Exception:
             pass
+
+    # Try Unified LLM (Groq / OpenAI) fallback before static questions
+    try:
+        from . import llm
+        if llm.ai_available():
+            text = llm.chat_generate(prompt_str, system="Respond strictly with valid JSON array of questions.", temperature=0.3, max_tokens=1500, json_mode=True)
+            data = safe_parse_json(text)
+            if isinstance(data, dict):
+                data = data.get("questions") or data.get("items") or data
+            if data and isinstance(data, list) and len(data) >= count:
+                return data[:count]
+    except Exception:
+        pass
+
     fallback = _fallback_questions(topic, age, style, count)
     # The fallback bank is authored in English. Localize its question and
     # choices before returning it so an Arabic exam never starts in English.
@@ -212,7 +227,7 @@ def generate_questions(topic, age, style="reading", count=4, difficulty="medium"
 
 
 def translate_text(text, target_lang):
-    """Translate text to target_lang ('ar' or 'en') using Gemini.
+    """Translate text to target_lang ('ar' or 'en') using Gemini or Unified LLM.
 
     Falls back gracefully if AI unavailable. Returns original text if no
     translation is needed or possible.
@@ -223,32 +238,41 @@ def translate_text(text, target_lang):
         return text
     if target_lang == "ar" and not _is_mostly_ascii(text):
         return text
-    # The fallback question bank has known, high-quality Arabic wording.
-    # Resolve it before making a network call so the translate button stays
-    # instant even when an AI provider is slow or temporarily unavailable.
     template_translation = _template_translate(text, target_lang)
     if template_translation != text:
         return template_translation
+
+    prompt = (
+        f"Translate the following text into {'Arabic (Modern Standard Arabic)' if target_lang == 'ar' else 'English'}. "
+        f"Return ONLY the translated text, no quotes, no explanation, no labels:\n\n{text}"
+    )
+
     if ai_available():
         try:
-            prompt = (
-                f"Translate the following text into {'Arabic (Modern Standard Arabic)' if target_lang == 'ar' else 'English'}. "
-                f"Return ONLY the translated text, no quotes, no explanation, no labels:\n\n{text}"
-            )
             out = _generate(prompt)
             if out and out.strip():
                 translated = out.strip().strip('"')
-                # Some providers can return the source text even after a
-                # successful request. Do not present that as a translation.
                 if target_lang == "ar" and not _is_mostly_ascii(translated):
                     return translated
                 if target_lang == "en" and _is_mostly_ascii(translated):
                     return translated
         except Exception:
             pass
-    # Offline/demo fallback for the platform's generated question templates.
-    # Unlike the old behaviour, it translates the phrases we own instead of
-    # silently returning the same language to the student.
+
+    # Unified LLM fallback for translation
+    try:
+        from . import llm
+        if llm.ai_available():
+            out = llm.chat_generate(prompt, system="You are an expert translator. Return only the translated text.", temperature=0.2, max_tokens=600, is_arabic=(target_lang == "ar"))
+            if out and out.strip():
+                translated = out.strip().strip('"')
+                if target_lang == "ar" and not _is_mostly_ascii(translated):
+                    return translated
+                if target_lang == "en" and _is_mostly_ascii(translated):
+                    return translated
+    except Exception:
+        pass
+
     return template_translation
 
 

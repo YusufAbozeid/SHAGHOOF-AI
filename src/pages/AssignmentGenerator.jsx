@@ -89,11 +89,36 @@ export default function AssignmentGenerator() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="border border-[var(--line)] rounded-lg p-6">
-            <h2 className="mb-3 text-lg font-extrabold text-blue-700 dark:text-blue-300" style={{ fontFamily: 'var(--font-heading)' }}>{result.title || topic}</h2>
-            {result.description && <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">{result.description}</p>}
+          <div className="border border-[var(--line)] rounded-lg p-6 bg-[var(--surface)]">
+            <div className="flex items-center justify-between mb-4 border-b pb-3 border-[var(--line)]">
+              <div>
+                <h2 className="text-xl font-extrabold text-[var(--brand)]" style={{ fontFamily: 'var(--font-heading)' }}>
+                  {result.topic || topic}
+                </h2>
+                <span className="text-xs text-[var(--muted)]">Status: {result.status || 'Generated'}</span>
+              </div>
+              <button
+                onClick={() => {
+                  const content = result.assignment || JSON.stringify(result, null, 2)
+                  navigator.clipboard.writeText(content)
+                  alert('Copied assignment to clipboard!')
+                }}
+                className="brand-btn-secondary text-xs px-3 py-1.5"
+              >
+                📋 Copy Text
+              </button>
+            </div>
+
+            {/* If backend returned markdown assignment string */}
+            {result.assignment && (
+              <div className="prose dark:prose-invert max-w-none text-sm text-[var(--ink)] whitespace-pre-line leading-relaxed font-sans">
+                {result.assignment}
+              </div>
+            )}
+
+            {/* Legacy structured questions fallback */}
             {result.questions && result.questions.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-3 mt-4">
                 {result.questions.map((q, i) => (
                   <div key={i} className="brand-tag bg-blue-50 p-4 dark:bg-blue-900/20">
                     <p className="text-sm font-bold text-gray-800 dark:text-gray-100">Q{i + 1}. {q.question || q.text || JSON.stringify(q)}</p>
@@ -103,7 +128,7 @@ export default function AssignmentGenerator() {
               </div>
             )}
             {result.rubric && (
-              <div className="mt-4 border border-[var(--line)] rounded-lg bg-green-50 p-4">
+              <div className="mt-4 border border-[var(--line)] rounded-lg bg-green-50 p-4 dark:bg-green-950/30">
                 <p className="text-sm font-bold text-green-700 dark:text-green-300 mb-1">Rubric</p>
                 <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-line">{typeof result.rubric === 'string' ? result.rubric : JSON.stringify(result.rubric, null, 2)}</p>
               </div>

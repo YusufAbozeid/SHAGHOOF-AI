@@ -355,6 +355,7 @@ class PdfUploadResponse(BaseModel):
     filename: str
     page_count: int
     chunk_count: int
+    word_count: int = 0
     status: str = "processed"
 
 

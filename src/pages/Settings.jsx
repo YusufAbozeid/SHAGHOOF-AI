@@ -34,6 +34,20 @@ const A11Y_OPTIONS = [
 
 function DataSourceCard({ source, onRemove, onSubjectChange, subjects }) {
   const typeLabels = { pdf: '📄 PDF', url: '🔗 Article', moodle: '🎓 Moodle', text: '✏️ Text' }
+  const renderDetails = () => {
+    if (source.pageCount) {
+      return `${source.pageCount} ${source.pageCount === 1 ? 'page' : 'pages'}${source.wordCount ? ` · ${source.wordCount.toLocaleString()} words` : ''}`
+    }
+    if (source.wordCount && source.wordCount > 0) {
+      return `${source.wordCount.toLocaleString()} words`
+    }
+    if (source.type === 'pdf') {
+      return 'Ready for AI Tutor & Quizzes'
+    }
+    return null
+  }
+  const details = renderDetails()
+
   return (
     <div className="rounded-xl border border-[var(--neutral-10)] bg-[var(--surface)]/60 p-3 backdrop-blur-sm">
       <div className="flex items-start justify-between gap-2">
@@ -43,7 +57,7 @@ function DataSourceCard({ source, onRemove, onSubjectChange, subjects }) {
             {source.subject && <span className="rounded-full bg-[var(--brand-light)] px-2 py-0.5 text-xs font-medium text-[var(--brand)]">{source.subject}</span>}
           </div>
           <p className="truncate text-sm font-medium text-[var(--ink)]">{source.name || source.url || 'Untitled'}</p>
-          {source.wordCount && <p className="mt-0.5 text-xs text-[var(--muted)]">{source.wordCount} words</p>}
+          {details && <p className="mt-0.5 text-xs text-[var(--muted)]">{details}</p>}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <select
@@ -105,10 +119,20 @@ export default function Settings() {
       } else if (uploadType === 'pdf' && uploadFile) {
         const fd = new FormData()
         fd.append('file', uploadFile)
-        const upRes = await fetch(`${API_BASE}/pdf/upload?user_id=${user.id}`, { method: 'POST', body: fd })
+        const userId = user?.id || 'default'
+        const upRes = await fetch(`${API_BASE}/pdf/upload?user_id=${userId}`, { method: 'POST', body: fd })
         if (!upRes.ok) throw new Error('Upload failed')
         const upData = await upRes.json()
-        setSources((prev) => [...prev, { id: Date.now().toString(), type: 'pdf', name: uploadFile.name, subject: '', wordCount: 0, sessionId: upData.session_id }])
+        setSources((prev) => [...prev, {
+          id: Date.now().toString(),
+          type: 'pdf',
+          name: uploadFile.name,
+          subject: '',
+          pageCount: upData.page_count || 1,
+          chunkCount: upData.chunk_count || 0,
+          wordCount: upData.word_count || 0,
+          sessionId: upData.session_id,
+        }])
         setUploadFile(null)
       } else if (uploadType === 'moodle' && moodleUrl.trim()) {
         setSources((prev) => [...prev, { id: Date.now().toString(), type: 'moodle', name: 'Moodle LMS', url: moodleUrl, subject: '', moodleToken }])

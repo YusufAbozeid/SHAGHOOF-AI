@@ -110,14 +110,22 @@ def find_session_by_filename(filename: str, user_id: str = 'default') -> Optiona
 
 def extract_text_from_pdf(pdf_bytes: bytes) -> tuple[str, int]:
     import io
-    from PyPDF2 import PdfReader
-    reader = PdfReader(io.BytesIO(pdf_bytes))
     text = ""
-    for page in reader.pages:
-        extracted = page.extract_text()
-        if extracted:
-            text += extracted + "\n"
-    return text, len(reader.pages)
+    page_count = 0
+    try:
+        from PyPDF2 import PdfReader
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        page_count = len(reader.pages)
+        for page in reader.pages:
+            try:
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted + "\n"
+            except Exception:
+                pass
+    except Exception as e:
+        logger.warning("PDF extraction failed: %s", e)
+    return text, page_count
 
 
 def _split_text(text: str, chunk_size: int = 1000, chunk_overlap: int = 200) -> list[str]:
@@ -138,10 +146,11 @@ def process_and_index(pdf_bytes: bytes, filename: str, user_id: str = "default")
     raw_id = f"{user_id}_{uuid.uuid4().hex[:10]}"
     session_id = re.sub(r'[^a-zA-Z0-9_\-]', '_', raw_id.strip())
     text, page_count = extract_text_from_pdf(pdf_bytes)
+    word_count = len(text.split()) if text else 0
 
     chunks = _split_text(text, chunk_size=1000, chunk_overlap=200)
     if not chunks:
-        return {"session_id": session_id, "filename": filename, "page_count": page_count, "chunk_count": 0}
+        return {"session_id": session_id, "filename": filename, "page_count": page_count, "chunk_count": 0, "word_count": word_count}
 
     embeddings = _get_embeddings()
     sdir = _session_dir(session_id)
@@ -161,7 +170,7 @@ def process_and_index(pdf_bytes: bytes, filename: str, user_id: str = "default")
 
     _write_meta(sdir, session_id, filename, page_count, len(chunks))
 
-    return {"session_id": session_id, "filename": filename, "page_count": page_count, "chunk_count": len(chunks)}
+    return {"session_id": session_id, "filename": filename, "page_count": page_count, "chunk_count": len(chunks), "word_count": word_count}
 
 
 def query_rag(

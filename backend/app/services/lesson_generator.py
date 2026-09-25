@@ -409,7 +409,7 @@ def generate_from_pdf_session(pdf_session_id: str, filename: str = '', subject: 
     import os as _os
     import re as _re
     from . import pdf_rag as _pdf_rag
-    base = _os.path.join(_os.path.dirname(__file__), '..', '..', 'storage', 'pdf_rag')
+    base = _pdf_rag._BASE_DIR
     safe_id = _re.sub(r'[^a-zA-Z0-9_\-]', '_', (pdf_session_id or '').strip())
     chunks_file = _os.path.join(base, safe_id, 'chunks.json')
     if not _os.path.exists(chunks_file) and filename:

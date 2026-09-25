@@ -1,0 +1,236 @@
+from __future__ import annotations
+import os
+import re
+import json
+import uuid
+import logging
+from typing import Any, Optional
+
+from ..core.config import settings
+
+logger = logging.getLogger(__name__)
+
+import tempfile
+
+if os.getenv("VERCEL"):
+    _BASE_DIR = os.path.join(tempfile.gettempdir(), "storage", "pdf_rag")
+else:
+    _BASE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "storage", "pdf_rag")
+
+try:
+    os.makedirs(_BASE_DIR, exist_ok=True)
+except Exception:
+    pass
+
+_embeddings = None
+
+
+def _get_embeddings():
+    global _embeddings
+    if _embeddings is not None:
+        return _embeddings
+    try:
+        from langchain_huggingface import HuggingFaceEmbeddings
+        _embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    except Exception:
+        try:
+            from sentence_transformers import SentenceTransformer
+
+            class _Fallback:
+                def __init__(self):
+                    self.model = SentenceTransformer("all-MiniLM-L6-v2")
+                def embed_documents(self, texts):
+                    return self.model.encode(texts).tolist()
+                def embed_query(self, text):
+                    return self.model.encode([text])[0].tolist()
+            _embeddings = _Fallback()
+        except Exception as e:
+            logger.warning("Embeddings unavailable: %s", e)
+            _embeddings = None
+    return _embeddings
+
+
+def _session_dir(session_id: str) -> str:
+    safe = re.sub(r'[^a-zA-Z0-9_\-]', '_', session_id.strip())
+    path = os.path.join(_BASE_DIR, safe)
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def _write_meta(sdir: str, session_id: str, filename: str, page_count: int, chunk_count: int) -> None:
+    """Persist session metadata so uploads survive restarts and stale clients."""
+    try:
+        with open(os.path.join(sdir, 'meta.json'), 'w', encoding='utf-8') as f:
+            json.dump({'session_id': session_id, 'filename': filename, 'page_count': page_count,
+                       'chunk_count': chunk_count, 'uploaded_at': __import__('datetime').datetime.now().isoformat()}, f,
+                      ensure_ascii=False)
+    except Exception as e:
+        logger.warning('meta.json write failed: %s', e)
+
+
+def find_session_by_filename(filename: str, user_id: str = 'default') -> Optional[str]:
+    """Resolve a stale sessionId to the user's newest session of that exact filename.
+    Backfills meta.json for legacy sessions while scanning."""
+    if not filename:
+        return None
+    best = None
+    best_mtime = -1.0
+    for name in os.listdir(_BASE_DIR):
+        if not name.startswith(re.sub(r'[^a-zA-Z0-9_\-]', '_', user_id.strip())):
+            continue
+        chunks_file = os.path.join(_BASE_DIR, name, 'chunks.json')
+        if not os.path.exists(chunks_file):
+            continue
+        meta_file = os.path.join(_BASE_DIR, name, 'meta.json')
+        meta = None
+        if os.path.exists(meta_file):
+            try:
+                with open(meta_file, 'r', encoding='utf-8') as f:
+                    meta = json.load(f)
+            except Exception:
+                meta = None
+        if meta is None:
+            try:
+                with open(chunks_file, 'r', encoding='utf-8') as f:
+                    chunks = json.load(f)
+                fname = (chunks[0].get('metadata', {}).get('filename', '') if chunks else '')
+                page_count = 0
+                chunk_count = len(chunks)
+                _write_meta(os.path.join(_BASE_DIR, name), name, fname, page_count, chunk_count)
+                meta = {'session_id': name, 'filename': fname, 'page_count': page_count, 'chunk_count': chunk_count}
+            except Exception:
+                continue
+        if (meta.get('filename') or '').strip().lower() == filename.strip().lower():
+            mtime = os.path.getmtime(chunks_file)
+            if mtime > best_mtime:
+                best_mtime = mtime
+                best = meta.get('session_id') or name
+    return best
+
+
+def extract_text_from_pdf(pdf_bytes: bytes) -> tuple[str, int]:
+    import io
+    text = ""
+    page_count = 0
+    try:
+        from PyPDF2 import PdfReader
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        page_count = len(reader.pages)
+        for page in reader.pages:
+            try:
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted + "\n"
+            except Exception:
+                pass
+    except Exception as e:
+        logger.warning("PDF extraction failed: %s", e)
+    return text, page_count
+
+
+def _split_text(text: str, chunk_size: int = 1000, chunk_overlap: int = 200) -> list[str]:
+    try:
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
+        return RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap).split_text(text)
+    except Exception:
+        chunks = []
+        start = 0
+        step = max(1, chunk_size - chunk_overlap)
+        while start < len(text):
+            chunks.append(text[start:start + chunk_size])
+            start += step
+        return chunks
+
+
+def process_and_index(pdf_bytes: bytes, filename: str, user_id: str = "default") -> dict[str, Any]:
+    raw_id = f"{user_id}_{uuid.uuid4().hex[:10]}"
+    session_id = re.sub(r'[^a-zA-Z0-9_\-]', '_', raw_id.strip())
+    text, page_count = extract_text_from_pdf(pdf_bytes)
+    word_count = len(text.split()) if text else 0
+
+    chunks = _split_text(text, chunk_size=1000, chunk_overlap=200)
+    if not chunks:
+        return {"session_id": session_id, "filename": filename, "page_count": page_count, "chunk_count": 0, "word_count": word_count}
+
+    embeddings = _get_embeddings()
+    sdir = _session_dir(session_id)
+
+    metadata = [{"session_id": session_id, "filename": filename, "chunk_index": i} for i in range(len(chunks))]
+
+    if embeddings is not None:
+        try:
+            from langchain_community.vectorstores import FAISS
+            vs = FAISS.from_texts(chunks, embedding=embeddings, metadatas=metadata)
+            vs.save_local(sdir)
+        except Exception as e:
+            logger.warning("FAISS indexing failed: %s", e)
+
+    with open(os.path.join(sdir, "chunks.json"), "w", encoding="utf-8") as f:
+        json.dump([{"text": c, "metadata": m} for c, m in zip(chunks, metadata)], f, ensure_ascii=False)
+
+    _write_meta(sdir, session_id, filename, page_count, len(chunks))
+
+    return {
+        "session_id": session_id,
+        "filename": filename,
+        "page_count": page_count,
+        "chunk_count": len(chunks),
+        "word_count": word_count,
+        "text": text[:40000] if text else "",
+    }
+
+
+def query_rag(
+    session_id: str, query: str, history: list[dict] | None = None, language: str = "ar",
+) -> dict[str, Any]:
+    sdir = _session_dir(session_id)
+    matched = []
+    embeddings = _get_embeddings()
+
+    if embeddings is not None:
+        try:
+            from langchain_community.vectorstores import FAISS
+            index_path = os.path.join(sdir, "index.faiss")
+            if os.path.exists(index_path):
+                vs = FAISS.load_local(sdir, embeddings, allow_dangerous_deserialization=True)
+                docs = vs.similarity_search(query, k=5)
+                matched = [{"text": d.page_content, "metadata": d.metadata or {}} for d in docs]
+        except Exception as e:
+            logger.warning("FAISS query failed: %s", e)
+
+    if not matched:
+        chunks_file = os.path.join(sdir, "chunks.json")
+        if os.path.exists(chunks_file):
+            try:
+                with open(chunks_file, "r", encoding="utf-8") as f:
+                    all_chunks = json.load(f)
+                terms = [t.lower() for t in query.split() if len(t) > 2]
+                scored = [(sum(1 for t in terms if t in c["text"].lower()), c) for c in all_chunks]
+                scored.sort(key=lambda x: x[0], reverse=True)
+                matched = [c for _, c in scored[:5]]
+            except Exception:
+                pass
+
+    if not matched:
+        return {"answer": "No matching content found. Please upload a PDF first.", "sources": []}
+
+    context = "\n\n---\n\n".join([f"[{c['metadata'].get('filename', '?')}]\n{c['text']}" for c in matched])
+    sources = [{"filename": c["metadata"].get("filename", "?"), "chunk": c["metadata"].get("chunk_index", 0),
+                "preview": c["text"][:120] + "..."} for c in matched]
+
+    try:
+        from . import llm
+        system = (
+            "You are an expert AI tutor. Answer strictly based on the provided PDF context. "
+            "Respond in the same language as the student's question. "
+            "Provide comprehensive, well-structured explanations."
+        )
+        prompt = f"PDF Context:\n{context}\n\nQuestion:\n{query}"
+        resp_text = llm.chat_generate(prompt, system=system, temperature=0.2, is_arabic=(language == "ar"))
+        if resp_text:
+            return {"answer": resp_text.strip(), "sources": sources}
+    except Exception as e:
+        logger.warning("RAG LLM failed: %s", e)
+
+    primary = matched[0]["text"]
+    return {"answer": f"Based on the uploaded material:\n\n{primary}", "sources": sources}

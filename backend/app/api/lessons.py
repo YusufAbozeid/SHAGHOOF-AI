@@ -70,6 +70,7 @@ class GenerateFromPdfSessionRequest(BaseModel):
     user_id: str = Field(default="default")
     source_id: str | None = Field(default=None, max_length=255)
     course_id: str | None = Field(default=None, max_length=255)
+    text: str | None = Field(default=None)
 
 
 class LessonListItem(BaseModel):
@@ -214,7 +215,7 @@ def generate_lesson_from_pdf_session(request: Request, req: GenerateFromPdfSessi
     try:
         lesson = lesson_generator.generate_from_pdf_session(
             pdf_session_id=req.pdf_session_id, filename=req.filename, subject=req.subject, user_id=req.user_id,
-            source_id=req.source_id, course_id=req.course_id,
+            source_id=req.source_id, course_id=req.course_id, text=req.text,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

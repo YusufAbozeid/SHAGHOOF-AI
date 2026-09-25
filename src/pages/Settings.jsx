@@ -132,6 +132,7 @@ export default function Settings() {
           chunkCount: upData.chunk_count || 0,
           wordCount: upData.word_count || 0,
           sessionId: upData.session_id,
+          text: upData.text || '',
         }])
         setUploadFile(null)
       } else if (uploadType === 'moodle' && moodleUrl.trim()) {

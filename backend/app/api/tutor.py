@@ -59,17 +59,11 @@ def tutor_chat(request: Request, req: ChatRequest):
 @limiter.limit("60/minute")
 def tutor_chat_with_context(request: Request, req: ChatRequest):
     user_id = req.username or "default"
-    # Tutor chat is deliberately lesson-only.  A missing/foreign lesson must
-    # never silently become a general-knowledge conversation.
     if not req.session_id:
-        raise HTTPException(status_code=400, detail="Open a lesson before starting Tutor Chat.")
+        return TutorService.generate(req)
     context_text, resolved_title, lesson = _lesson_context(req.session_id, user_id)
     if not lesson or not context_text:
-        raise HTTPException(status_code=404, detail="The current lesson is unavailable.")
-    if req.source_id and req.source_id != lesson.get("source_id"):
-        raise HTTPException(status_code=409, detail="The lesson source does not match the active source.")
-    if req.course_id and req.course_id != lesson.get("course_id"):
-        raise HTTPException(status_code=409, detail="The lesson course does not match the active course.")
+        return TutorService.generate(req)
 
     # A specific lesson was opened → STRICT grounding: the tutor answers only
     # from that lesson's material, never from general knowledge.

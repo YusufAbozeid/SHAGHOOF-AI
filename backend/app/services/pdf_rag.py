@@ -170,7 +170,14 @@ def process_and_index(pdf_bytes: bytes, filename: str, user_id: str = "default")
 
     _write_meta(sdir, session_id, filename, page_count, len(chunks))
 
-    return {"session_id": session_id, "filename": filename, "page_count": page_count, "chunk_count": len(chunks), "word_count": word_count}
+    return {
+        "session_id": session_id,
+        "filename": filename,
+        "page_count": page_count,
+        "chunk_count": len(chunks),
+        "word_count": word_count,
+        "text": text[:40000] if text else "",
+    }
 
 
 def query_rag(

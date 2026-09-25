@@ -155,7 +155,15 @@ export default function LessonTutor() {
       if (source.type === 'url' && source.url) {
         result = await api.generateLessonFromUrl({ url: source.url, topic: source.name, subject: source.subject || '', source_id: source.id, course_id: courseIdFor(source), user_id: user.id })
       } else if (source.type === 'pdf' && source.sessionId) {
-        result = await api.generateLessonFromPdfSession({ pdf_session_id: source.sessionId, filename: source.name, subject: source.subject || '', source_id: source.id, course_id: courseIdFor(source), user_id: user.id })
+        result = await api.generateLessonFromPdfSession({
+          pdf_session_id: source.sessionId,
+          filename: source.name,
+          subject: source.subject || '',
+          source_id: source.id,
+          course_id: courseIdFor(source),
+          user_id: user.id,
+          text: source.text || undefined,
+        })
       } else if (source.type === 'pdf' && source.file) {
         const fd = new FormData()
         fd.append('file', source.file)
@@ -529,6 +537,29 @@ export default function LessonTutor() {
                   )
                 })}
               </div>
+
+              <label className="flex items-center justify-center gap-2 w-full mt-2.5 py-2 px-3 border border-dashed border-[var(--brand)] rounded-xl text-xs font-bold text-[var(--brand)] hover:bg-[var(--brand-light)] cursor-pointer transition-all bg-[var(--surface)]">
+                <span>📤</span>
+                <span>{arabic ? '+ رفع ملف PDF جديد وتوليد الدرس' : '+ Upload new PDF & generate'}</span>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const fakeSource = {
+                      id: Date.now().toString(),
+                      name: file.name,
+                      type: 'pdf',
+                      file: file,
+                      subject: currentSubject || '',
+                    }
+                    generateLesson(fakeSource)
+                    e.target.value = ''
+                  }}
+                />
+              </label>
             </div>
           )}
 

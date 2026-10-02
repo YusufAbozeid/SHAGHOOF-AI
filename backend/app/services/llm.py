@@ -20,17 +20,17 @@ logger = logging.getLogger(__name__)
 
 # Primary active models on Groq
 GROQ_MODELS = [
-    "qwen/qwen3.8-27b",
+    "llama-3.3-70b-versatile",
     "openai/gpt-oss-20b",
-    "allam-2-7b",
+    "llama-3.1-8b-instant",
     "openai/gpt-oss-120b",
     "llama-3.3-70b-versatile",
     "llama-3.1-8b-instant",
 ]
 
 GROQ_ARABIC_MODELS = [
-    "allam-2-7b",
-    "qwen/qwen3.8-27b",
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
     "openai/gpt-oss-20b",
 ]
 

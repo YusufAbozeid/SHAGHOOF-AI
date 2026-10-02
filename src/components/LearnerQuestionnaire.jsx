@@ -70,7 +70,7 @@ export default function LearnerQuestionnaire({ lang = 'en', phase, senAnswers, v
             onClick={() => (senPage < totalPages - 1 ? setSenPage((page) => page + 1) : onContinue())}
             className="flex-1 rounded-xl bg-violet-600 px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {senPage < totalPages - 1 ? (arabic ? 'التالي' : 'Next') : (continueLabel || (arabic ? 'التالي: أسلوب التعلم' : 'Next: learning style'))}
+            {senPage < totalPages - 1 ? (arabic ? 'التالي' : 'Next') : (continueLabel || (arabic ? 'التالي: تنسيق المحتوى' : 'Next: content format'))}
           </button>
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function LearnerQuestionnaire({ lang = 'en', phase, senAnswers, v
       </div>
       {preview.hasSen && (
         <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-          {arabic ? 'دعم الاحتياجات الخاصة له أولوية أعلى من أسلوب VARK في الواجهة.' : 'SEN support will take priority over VARK in the interface.'}
+          {arabic ? 'دعم الاحتياجات الخاصة له أولوية أعلى من قالب UDL في الواجهة.' : 'SEN support will take priority over VARK in the interface.'}
         </p>
       )}
       <button type="button" onClick={onBack} className="mt-5 text-sm font-semibold text-gray-500 hover:text-gray-800 dark:text-gray-400">

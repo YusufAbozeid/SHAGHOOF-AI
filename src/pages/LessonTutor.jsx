@@ -314,7 +314,11 @@ export default function LessonTutor() {
         course_id: lessonDetail?.course_id || undefined,
         strict_lesson: !!selectedLesson,
       })
-      setMessages((prev) => [...prev, { role: 'tutor', content: res.text || (arabic ? 'لا يوجد رد.' : 'No response.') }])
+      setMessages((prev) => [...prev, {
+        role: 'tutor',
+        content: res.text || (arabic ? 'لا يوجد رد.' : 'No response.'),
+        isGrounded: !!selectedLesson
+      }])
       // Accessibility suite: voiceReader auto-reads every tutor reply aloud.
       const replyText = res.text
       if (replyText && toggles.voiceReader) {

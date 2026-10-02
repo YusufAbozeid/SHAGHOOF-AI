@@ -115,7 +115,7 @@ _CACHE: dict = {}
 def _get_model(api_key: str):
     if api_key in _CACHE:
         return _CACHE[api_key]
-    model_name = getattr(settings, "GROQ_MODEL", None) or os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+    model_name = getattr(settings, "GROQ_MODEL", None) or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     base = ChatGroq(model=model_name, temperature=0.7, max_tokens=2048,
                     model_kwargs={"top_p": 0.95}, api_key=api_key)
     structured = base.with_structured_output(_QuizResponse)

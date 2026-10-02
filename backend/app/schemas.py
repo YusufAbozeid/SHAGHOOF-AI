@@ -134,6 +134,8 @@ class ChatResponse(BaseModel):
     modality: str
     language: str
     status: str = "success"
+    grounded: bool = False
+    source: str | None = None
 
 
 # ── Quiz Generation ─────────────────────────────────────────────────────────

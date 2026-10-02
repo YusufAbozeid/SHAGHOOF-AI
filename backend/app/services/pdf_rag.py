@@ -30,15 +30,20 @@ def _get_embeddings():
     if _embeddings is not None:
         return _embeddings
     try:
+        from ..core.config import settings
+        _emb_model = getattr(settings, "EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+    except Exception:
+        _emb_model = "all-MiniLM-L6-v2"
+    try:
         from langchain_huggingface import HuggingFaceEmbeddings
-        _embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        _embeddings = HuggingFaceEmbeddings(model_name=_emb_model)
     except Exception:
         try:
             from sentence_transformers import SentenceTransformer
 
             class _Fallback:
                 def __init__(self):
-                    self.model = SentenceTransformer("all-MiniLM-L6-v2")
+                    self.model = SentenceTransformer(_emb_model)
                 def embed_documents(self, texts):
                     return self.model.encode(texts).tolist()
                 def embed_query(self, text):

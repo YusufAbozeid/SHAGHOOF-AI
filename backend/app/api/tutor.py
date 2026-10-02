@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+﻿from fastapi import APIRouter, HTTPException, Request
 from ..schemas import ChatRequest, ChatResponse
 from ..services.tutor import TutorService
 from ..services import lesson_generator
@@ -16,7 +16,7 @@ def _lesson_context(session_id: str | None, user_id: str) -> tuple[str, str | No
     if session_id:
         detail = lesson_generator.get_lesson(session_id, user_id=user_id)
         if detail:
-            # Full lesson material — every section, key concepts, vocabulary —
+            # Full lesson material â€” every section, key concepts, vocabulary â€”
             # so the tutor can answer anything the lesson actually covers.
             parts = [f"Lesson title: {detail.get('title', '')}"]
             if detail.get('summary'):
@@ -33,7 +33,7 @@ def _lesson_context(session_id: str | None, user_id: str) -> tuple[str, str | No
             return "\n".join(parts), detail.get("title"), detail
         return "", None, None
 
-    # No specific lesson — ground in the student's recent lessons (general mode).
+    # No specific lesson â€” ground in the student's recent lessons (general mode).
     try:
         lessons = lesson_generator.list_user_lessons(user_id=user_id)
         if lessons:
@@ -52,7 +52,15 @@ def _lesson_context(session_id: str | None, user_id: str) -> tuple[str, str | No
 @router.post("/tutor", response_model=ChatResponse)
 @limiter.limit("60/minute")
 def tutor_chat(request: Request, req: ChatRequest):
-    return TutorService.generate(req)
+    res = TutorService.generate(req)
+    if isinstance(res, dict):
+        res["grounded"] = False
+        res["source"] = "general_knowledge"
+        return res
+    if hasattr(res, "grounded"):
+        res.grounded = False
+        res.source = "general_knowledge"
+    return res
 
 
 @router.post("/tutor/rag", response_model=ChatResponse)
@@ -65,7 +73,7 @@ def tutor_chat_with_context(request: Request, req: ChatRequest):
     if not lesson or not context_text:
         return TutorService.generate(req)
 
-    # A specific lesson was opened → STRICT grounding: the tutor answers only
+    # A specific lesson was opened â†’ STRICT grounding: the tutor answers only
     # from that lesson's material, never from general knowledge.
     strict = True
     if strict and not req.lesson_title and resolved_title:

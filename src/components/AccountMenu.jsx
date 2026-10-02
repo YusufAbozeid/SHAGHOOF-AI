@@ -15,11 +15,11 @@ const CORE_COPY = {
   visual: { en: 'Visual', ar: 'بصري' },
   auditory: { en: 'Auditory', ar: 'سمعي' },
   reading: { en: 'Read / Write', ar: 'قرائي' },
-  kinesthetic: { en: 'Kinesthetic', ar: 'حركي' },
+  kinesthetic: { en: 'Interactive', ar: 'تفاعلي' },
 }
 
 const OVERLAY_COPY = {
-  general: { en: 'None (VARK only)', ar: 'بدون دعم (VARK فقط)' },
+  general: { en: 'None (UDL only)', ar: 'بدون دعم (UDL فقط)' },
   text: { en: 'Text support', ar: 'دعم النص' },
   focus: { en: 'Focus support', ar: 'دعم التركيز' },
   structure: { en: 'Structure support', ar: 'دعم البنية' },
@@ -55,10 +55,10 @@ export default function AccountMenu({ onLogout }) {
 
   // "Why this template" — explain the two layers that produced the active template.
   const coreWhy = {
-    visual: { en: 'your VARK quiz scored Visual highest', ar: 'نتيجة اختبار VARK أنك بصري' },
-    auditory: { en: 'your VARK quiz scored Auditory highest', ar: 'نتيجة اختبار VARK أنك سمعي' },
-    reading: { en: 'your VARK quiz scored Reading/Writing highest', ar: 'نتيجة اختبار VARK أنك قرائي' },
-    kinesthetic: { en: 'your VARK quiz scored Kinesthetic highest', ar: 'نتيجة اختبار VARK أنك حركي' },
+    visual: { en: 'your UDL format preferred: Visual', ar: 'تفضيل UDL الخاص بك هو بصري' },
+    auditory: { en: 'your UDL format preferred: Auditory', ar: 'تفضيل UDL الخاص بك هو سمعي' },
+    reading: { en: 'your VARK quiz scored Reading/Writing highest', ar: 'تفضيل UDL الخاص بك هو قرائي' },
+    kinesthetic: { en: 'your UDL format preferred: Kinesthetic', ar: 'تفضيل UDL الخاص بك هو حركي' },
   }
   const overlayWhy = {
     general: { en: 'no extra support layer is needed', ar: 'لا تحتاج طبقة دعم إضافية' },
@@ -118,10 +118,10 @@ export default function AccountMenu({ onLogout }) {
               </p>
               <p className="mb-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
                 {arabic
-                  ? 'طبقة الدعم لها أولوية أعلى. أسلوب VARK يختار القالب داخل تلك الطبقة.'
+                  ? 'طبقة الدعم لها أولوية أعلى. قالب UDL يختار القالب داخل تلك الطبقة.'
                   : 'SEN overlay has priority. VARK picks the template inside that overlay.'}
               </p>
-              <p className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">{arabic ? 'أسلوب VARK' : 'VARK core'}</p>
+              <p className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">{arabic ? 'قالب UDL' : 'UDL representation'}</p>
               <div className="mb-3 grid grid-cols-2 gap-1.5">
                 {CORE_OPTIONS.map((key) => (
                   <button

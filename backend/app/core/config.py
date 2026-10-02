@@ -11,17 +11,19 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "SHAGHOOF AI Enterprise Platform"
+    PROJECT_NAME: str = "SHAGHOOF AI production Platform"
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = os.getenv("APP_SECRET_KEY", os.getenv("SECRET_KEY", "shaghoof-super-secret-production-key-2026-v2"))
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "shaghoof-super-secret-production-key-2026-v2")
+    MOODLE_TOKEN_ENCRYPTION_KEY: str = os.getenv("MOODLE_TOKEN_ENCRYPTION_KEY", "shaghoof-moodle-aes256-encryption-key-2026")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 Days
 
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")  # NOTE: Use 'paraphrase-multilingual-MiniLM-L12-v2' for better Arabic support
     risk_threshold: int = 40
     
     # CORS Origins (Scoped for Production Security)

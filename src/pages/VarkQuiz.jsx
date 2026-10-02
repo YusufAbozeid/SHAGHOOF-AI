@@ -78,7 +78,7 @@ export default function VarkQuiz() {
           <p className="mt-2 text-sm text-[var(--muted)]">
             {phase === 'sen'
               ? 'The SEN overlay will apply on every tab, with higher priority.'
-              : 'The VARK core layer will shape how content is presented.'}
+              : 'The UDL representation layer will shape how content is presented.'}
           </p>
         </div>
         <section className="border border-[var(--line)] rounded-lg p-6 bg-[var(--surface)]">

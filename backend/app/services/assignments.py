@@ -119,7 +119,7 @@ def generate_assignment(
     key = api_key or settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY", "")
     if ChatGroq is not None and StateGraph is not None and key:
         try:
-            model = ChatGroq(api_key=key, model=getattr(settings, "GROQ_MODEL", "qwen/qwen3.8-27b"),
+            model = ChatGroq(api_key=key, model=getattr(settings, "GROQ_MODEL", "llama-3.3-70b-versatile"),
                              temperature=0.2, timeout=60, max_retries=2)
             graph = _build_graph(model, key)
             result = graph.invoke({

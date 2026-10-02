@@ -11,7 +11,7 @@ const VARK_COPY = {
   visual: { en: 'Visual', ar: 'بصري', icon: '👁️', color: '#3b82f6', desc: { en: 'Diagrams, charts, and visual maps', ar: 'الرسوم والمخططات والخرائط البصرية' } },
   auditory: { en: 'Auditory', ar: 'سمعي', icon: '🎧', color: '#8b5cf6', desc: { en: 'Listening, discussion, podcasts', ar: 'الاستماع والنقاش والبودكاست' } },
   reading: { en: 'Read/Write', ar: 'قرائي', icon: '📖', color: '#10b981', desc: { en: 'Notes, lists, written text', ar: 'الملاحظات والقوائم والنصوص' } },
-  kinesthetic: { en: 'Kinesthetic', ar: 'حركي', icon: '🖐️', color: '#f97316', desc: { en: 'Hands-on practice and activities', ar: 'التجريب العملي والأنشطة' } },
+  kinesthetic: { en: 'Interactive', ar: 'تفاعلي', icon: '🖐️', color: '#f97316', desc: { en: 'Hands-on practice and activities', ar: 'التجريب العملي والأنشطة' } },
 }
 
 const SEN_COPY = {
@@ -138,7 +138,7 @@ export default function Profile() {
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-[var(--ink)]" style={{ fontFamily: 'var(--font-heading)' }}>🧠 {arabic ? 'عجلة الدماغ (VARK)' : 'Brain Wheel (VARK)'}</h2>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowReveal(true)} className="brand-btn-ghost py-1.5 text-xs">{arabic ? 'اسلوب تعلمي' : 'Learning style'}</button>
+            <button onClick={() => setShowReveal(true)} className="brand-btn-ghost py-1.5 text-xs">{arabic ? 'اسلوب تعلمي' : 'Content format'}</button>
             <Link to="/vark-quiz" className="brand-btn-ghost py-1.5 text-xs">{arabic ? 'أعد الاختبار' : 'Retake quiz'}</Link>
           </div>
         </div>

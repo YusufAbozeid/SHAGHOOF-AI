@@ -18,7 +18,7 @@ const VARK_COPY = {
   visual: { en: 'Visual', ar: 'البصري' },
   auditory: { en: 'Auditory', ar: 'السمعي' },
   reading: { en: 'Reading', ar: 'القرائي' },
-  kinesthetic: { en: 'Kinesthetic', ar: 'الحركي' },
+  kinesthetic: { en: 'Interactive', ar: 'الحركي' },
 }
 
 function getMoodActivities(mood, arabic, lessons) {

@@ -5,6 +5,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
+# TODO: For production, configure SlowAPI to use a Redis storage backend
 limiter = Limiter(key_func=get_remote_address)
 
 

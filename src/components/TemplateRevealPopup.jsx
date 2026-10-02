@@ -39,7 +39,7 @@ const REASON = {
 }
 
 const COPY = {
-  discover: { en: 'We discovered your learning style!', ar: '!اكتشفنا أسلوب تعلمك' },
+  discover: { en: 'We discovered your content format!', ar: '!اكتشفنا أسلوب تعلمك' },
   templateIs: { en: 'Your template is', ar: 'قالبك هو' },
   why: { en: 'Why this template?', ar: 'لماذا هذا القالب؟' },
   close: { en: 'Got it!', ar: '!فهمت' },

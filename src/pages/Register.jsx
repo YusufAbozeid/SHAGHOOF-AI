@@ -199,7 +199,7 @@ export default function Register() {
               ) : (
                 <div className="space-y-2">
                   <p className="rounded-2xl px-4 py-2.5 text-xs font-bold text-[var(--primary-orange)]" style={{ background: 'color-mix(in srgb, var(--primary-orange) 10%, transparent)' }}>
-                    🎓 {t.studentNote || 'Students answer a short questionnaire so lessons match your learning style.'}
+                    🎓 {t.studentNote || 'Students answer a short questionnaire so lessons match your content format.'}
                   </p>
                   {/* School mode: grade-based enrollment, auto-linked to the teacher's class. */}
                   <label className="flex cursor-pointer items-center justify-between rounded-2xl border-2 border-[var(--neutral-10)] bg-[var(--surface)] px-4 py-3">

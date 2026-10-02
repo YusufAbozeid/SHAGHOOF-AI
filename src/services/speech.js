@@ -76,7 +76,7 @@ export function stopSpeaking() {
   if ('speechSynthesis' in window) window.speechSynthesis.cancel()
 }
 
-// Sign language must be a verified signed-video asset, never an emoji or a
+// synchronized captions and transcripts must be a verified signed-video asset, never an emoji or a
 // text description pretending to be a sign. Questions can provide a local or
 // trusted `sign_video` URL when such assets are licensed and available.
 export function hasVerifiedSignVideo(question) {

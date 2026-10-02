@@ -8,7 +8,7 @@ const STYLES = {
   visual: { en: 'Visual', ar: 'البصري', icon: '👁️', tip: { en: 'Describe what you would draw', ar: 'صِف ما سترسمه' } },
   auditory: { en: 'Auditory', ar: 'السمعي', icon: '🎧', tip: { en: 'Explain it as if telling a friend', ar: 'اشرحها وكأنك تحدّث صديقاً' } },
   reading: { en: 'Read/Write', ar: 'القرائي', icon: '📖', tip: { en: 'Write the key points in your words', ar: 'اكتب النقاط الأساسية بكلماتك' } },
-  kinesthetic: { en: 'Kinesthetic', ar: 'الحركي', icon: '🖐️', tip: { en: 'Describe the steps as if doing it', ar: 'صِف الخطوات وكأنك تنفذها' } },
+  kinesthetic: { en: 'Interactive', ar: 'الحركي', icon: '🖐️', tip: { en: 'Describe the steps as if doing it', ar: 'صِف الخطوات وكأنك تنفذها' } },
 }
 
 const KEYWORDS = {

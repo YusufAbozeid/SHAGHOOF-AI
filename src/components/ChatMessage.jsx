@@ -151,11 +151,14 @@ export default function ChatMessage({ msg, index, onSpeak, speakingId }) {
           )
         )}
         {!isUser && (
-          <div className="mt-1.5 flex gap-2 opacity-70">
+          <div className="mt-1.5 flex gap-2 opacity-70 items-center">
             <button onClick={() => onSpeak(msg.content, `msg-${index}`)} className="text-[10px] font-bold hover:opacity-100" title="Text-to-speech">
               {speakingId === `msg-${index}` ? '⏹ Stop' : '🔊 Listen'}
             </button>
             <button onClick={() => navigator.clipboard?.writeText(msg.content)} className="text-[10px] font-bold hover:opacity-100">📋 Copy</button>
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 ml-auto">
+              {msg.isGrounded ? 'إجابة من المحاضرة (From Course Material)' : 'إجابة عامة (General Answer)'}
+            </span>
           </div>
         )}
       </div>

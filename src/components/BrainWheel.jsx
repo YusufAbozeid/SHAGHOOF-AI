@@ -77,7 +77,7 @@ export default function BrainWheel({ data, selectedStyle, onSelectStyle }) {
         strokeWidth="2"
       />
       <circle cx={center} cy={center} r="28" className="fill-white dark:fill-gray-900" />
-      <text x={center} y={center - 2} textAnchor="middle" style={{ fill: '#8B5CF6' }} className="text-[10px] font-extrabold">VARK</text>
+      <text x={center} y={center - 2} textAnchor="middle" style={{ fill: '#8B5CF6' }} className="text-[10px] font-extrabold">UDL Profile</text>
       <text x={center} y={center + 12} textAnchor="middle" className="fill-gray-500 dark:fill-gray-400 text-[8px] font-bold">{data.badge || 'PROFILE'}</text>
       {data.values.map((v, i) => {
         const p = point(i, v)

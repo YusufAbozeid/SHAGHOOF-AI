@@ -924,16 +924,16 @@ doc.add_page_break()
 add_heading_with_bottom_border("15. Team & Project Information", 1)
 
 add_p("", bold_prefix="Supervisor: ", keep_with_next=True)
-add_p("[Supervisor Name — to be filled]", italic=True)
+add_p("Dr. Mahmoud Sami")
 
 team_data = [
     ("Role", "Name", "Student ID", "Responsibility"),
-    ("Team Leader", "Yusuf Abozeid", "[ID]", "Architecture, Backend, AI Pipeline, RAG"),
-    ("Member", "Osama Mohammed", "[ID]", "Frontend, UI/UX, Accessibility"),
-    ("Member", "Omar Mohammed", "[ID]", "Moodle Integration, Testing"),
-    ("Member", "Ziad Samih", "[ID]", "Gamification, Knowledge Graph"),
-    ("Member", "Mariam Muhammad", "[ID]", "Podcast, Voice Synthesis, Content"),
-    ("Member", "Reem Tawfik", "[ID]", "Security, Documentation, Evaluation")
+    ("Team Leader", "Yusuf Adel Abbas", "20235824", "Architecture, Backend, AI Pipeline, RAG"),
+    ("Member", "Osama Mohammed Essmat", "20235267", "Frontend, UI/UX, Accessibility"),
+    ("Member", "Omar Mohammed Salah", "20232371", "Moodle Integration, Testing"),
+    ("Member", "Ziad Sameh Bedair", "20234819", "Gamification, Knowledge Graph"),
+    ("Member", "Mariam Muhammad Samir", "20232469", "Podcast, Voice Synthesis, Content"),
+    ("Member", "Reem Tawfik Elkhouly", "20234001", "Security, Documentation, Evaluation")
 ]
 t_team = doc.add_table(rows=len(team_data), cols=4)
 t_team.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -980,7 +980,22 @@ references = [
 for ref in references:
     add_p(ref, space_after=3)
 
-# ── SAVE ────────────────────────────────────────────────────────────
+# ── SAVE & EXPORT PDF ──────────────────────────────────────────────
 output_docx = r"C:\Users\Mayada AbouZeid\Downloads\SHAGHOOF_Project_Proposal_Updated.docx"
+output_pdf = r"C:\Users\Mayada AbouZeid\Downloads\SHAGHOOF_Project_Proposal_Updated.pdf"
 doc.save(output_docx)
 print(f"Successfully generated clean docx: {output_docx}")
+
+try:
+    import win32com.client
+    import pythoncom
+    pythoncom.CoInitialize()
+    word = win32com.client.Dispatch("Word.Application")
+    word.Visible = False
+    doc_word = word.Documents.Open(output_docx)
+    doc_word.SaveAs(output_pdf, FileFormat=17)  # 17 = wdFormatPDF
+    doc_word.Close()
+    word.Quit()
+    print(f"Successfully generated clean pdf: {output_pdf}")
+except Exception as e:
+    print(f"Word PDF conversion warning: {e}")

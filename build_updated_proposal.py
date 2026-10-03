@@ -15,11 +15,21 @@ for section in doc.sections:
     section.left_margin = Inches(0.85)
     section.right_margin = Inches(0.85)
 
-# Colors
-PRIMARY_BLUE = RGBColor(67, 56, 202)      # #4338CA
-TEXT_DARK = RGBColor(30, 41, 59)          # Slate dark
-MUTED_GRAY = RGBColor(100, 116, 139)      # Slate muted
-BORDER_COLOR = "CBD5E1"
+# Typography
+FONT_NAME = 'Segoe UI'
+
+# SHAGHOOF Brand Color Palette
+PRIMARY_BRAND = RGBColor(232, 111, 31)     # #E86F1F (Deep vibrant warm orange - primary brand)
+BRAND_ACCENT = RGBColor(255, 61, 46)      # #FF3D2E (Vibrant tomato red / coral)
+BRAND_PEACH = RGBColor(255, 138, 61)      # #FF8A3D (Rich warm peach-orange)
+TEXT_DARK = RGBColor(30, 41, 59)          # #1E293B (Slate dark text)
+MUTED_GRAY = RGBColor(100, 116, 139)      # #64748B (Slate muted)
+
+# Hex Colors for XML Shading
+BRAND_HEADER_HEX = "E86F1F"               # Primary table header background
+BRAND_ROW_ALT_HEX = "FFF8F2"              # Warm peach-white alternating rows (--nynatrema-60)
+BRAND_HIGHLIGHT_HEX = "FFEDD5"            # Soft amber highlight
+BORDER_COLOR_HEX = "FED7AA"               # Warm amber border
 
 def set_cell_shading(cell, color_hex):
     shading_elm = parse_xml(f'<w:shd {nsdecls("w")} w:fill="{color_hex}"/>')
@@ -40,14 +50,14 @@ def add_heading_with_bottom_border(text, level=1):
     h.paragraph_format.space_after = Pt(5)
     h.paragraph_format.keep_with_next = True
     run = h.add_run(text)
-    run.font.name = 'Calibri'
+    run.font.name = FONT_NAME
     run.font.size = Pt(15 if level == 1 else 12.5)
     run.font.bold = True
-    run.font.color.rgb = PRIMARY_BLUE
+    run.font.color.rgb = PRIMARY_BRAND
     
     if level == 1:
         pPr = h._p.get_or_add_pPr()
-        pBdr = parse_xml(f'<w:pBdr {nsdecls("w")}><w:bottom w:val="single" w:sz="12" w:space="4" w:color="4338CA"/></w:pBdr>')
+        pBdr = parse_xml(f'<w:pBdr {nsdecls("w")}><w:bottom w:val="single" w:sz="12" w:space="4" w:color="E86F1F"/></w:pBdr>')
         pPr.append(pBdr)
     return h
 
@@ -103,55 +113,79 @@ def add_table_from_data(data, col_widths=None):
             p.paragraph_format.space_before = Pt(2)
             p.paragraph_format.space_after = Pt(2)
             run = p.runs[0]
-            run.font.name = 'Calibri'
+            run.font.name = FONT_NAME
             run.font.size = Pt(8.5)
             if r_idx == 0:
                 run.font.bold = True
                 run.font.color.rgb = RGBColor(255, 255, 255)
-                set_cell_shading(cell, "4338CA")
+                set_cell_shading(cell, BRAND_HEADER_HEX)
             else:
                 run.font.color.rgb = TEXT_DARK
-                set_cell_shading(cell, "F8FAFC" if r_idx % 2 == 1 else "FFFFFF")
+                set_cell_shading(cell, BRAND_ROW_ALT_HEX if r_idx % 2 == 1 else "FFFFFF")
     return table
 
-# ── PAGE 1: TITLE / COVER ──────────────────────────────────────────
-# FIX #1: Updated subtitle to remove 'cognitive style'
-p_cover_top = doc.add_paragraph()
-p_cover_top.paragraph_format.space_before = Pt(160)
-p_cover_top.alignment = WD_ALIGN_PARAGRAPH.CENTER
+# ── PAGE 1: TITLE / COVER (SHAGHOOF BRANDED) ──────────────────────────
+# Logo Mark
+p_logo = doc.add_paragraph()
+p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+p_logo.paragraph_format.space_before = Pt(70)
+p_logo.paragraph_format.space_after = Pt(14)
+if os.path.exists('public/brand/shaghoof-mark-clear.png'):
+    p_logo.add_run().add_picture('public/brand/shaghoof-mark-clear.png', width=Inches(1.85))
 
-r_title = p_cover_top.add_run("SHAGHOOF AI\n")
-r_title.font.name = 'Calibri'
-r_title.font.size = Pt(28)
+p_title = doc.add_paragraph()
+p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+p_title.paragraph_format.space_after = Pt(4)
+r_title = p_title.add_run("SHAGHOOF AI\n")
+r_title.font.name = FONT_NAME
+r_title.font.size = Pt(30)
 r_title.font.bold = True
-r_title.font.color.rgb = PRIMARY_BLUE
+r_title.font.color.rgb = PRIMARY_BRAND
 
 p_sub = doc.add_paragraph()
 p_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
 p_sub.paragraph_format.space_after = Pt(8)
 r_sub = p_sub.add_run("Adaptive AI-Powered Education Platform\n")
-r_sub.font.name = 'Calibri'
+r_sub.font.name = FONT_NAME
 r_sub.font.size = Pt(14)
 r_sub.font.bold = True
 r_sub.font.color.rgb = TEXT_DARK
 
-# FIX #1: Changed subtitle from 'cognitive style' to 'accessible, multimodal'
 p_tagline = doc.add_paragraph()
 p_tagline.alignment = WD_ALIGN_PARAGRAPH.CENTER
-p_tagline.paragraph_format.space_after = Pt(140)
+p_tagline.paragraph_format.space_after = Pt(80)
 r_tag = p_tagline.add_run("Accessible, multimodal learning built from your own course materials")
-r_tag.font.name = 'Calibri'
+r_tag.font.name = FONT_NAME
 r_tag.font.size = Pt(11)
 r_tag.font.italic = True
 r_tag.font.color.rgb = MUTED_GRAY
 
 p_meta = doc.add_paragraph()
 p_meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
-r_meta1 = p_meta.add_run("Graduation Project Proposal")
-r_meta1.font.name = 'Calibri'
+p_meta.paragraph_format.space_after = Pt(6)
+r_meta1 = p_meta.add_run("Graduation Project Proposal\n")
+r_meta1.font.name = FONT_NAME
 r_meta1.font.size = Pt(13)
 r_meta1.font.bold = True
-r_meta1.font.color.rgb = RGBColor(16, 149, 193)
+r_meta1.font.color.rgb = BRAND_ACCENT
+
+p_meta2 = doc.add_paragraph()
+p_meta2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r_sup = p_meta2.add_run("Academic Supervisor: Dr. Mahmoud Sami\n")
+r_sup.font.name = FONT_NAME
+r_sup.font.size = Pt(11)
+r_sup.font.bold = True
+r_sup.font.color.rgb = TEXT_DARK
+
+r_team = p_meta2.add_run("Team Leader: Yusuf Adel Abbas (20235824)\n")
+r_team.font.name = FONT_NAME
+r_team.font.size = Pt(10)
+r_team.font.color.rgb = MUTED_GRAY
+
+r_year = p_meta2.add_run("Academic Year 2025 – 2026")
+r_year.font.name = FONT_NAME
+r_year.font.size = Pt(9.5)
+r_year.font.color.rgb = MUTED_GRAY
 
 doc.add_page_break()
 
@@ -180,7 +214,7 @@ for item in toc_items:
     p_toc = doc.add_paragraph()
     p_toc.paragraph_format.space_after = Pt(4)
     r_toc = p_toc.add_run(item)
-    r_toc.font.name = 'Calibri'
+    r_toc.font.name = FONT_NAME
     r_toc.font.size = Pt(11)
     r_toc.font.color.rgb = TEXT_DARK
 
@@ -254,19 +288,19 @@ for r_idx, row in enumerate(related_work):
         p.paragraph_format.space_before = Pt(2)
         p.paragraph_format.space_after = Pt(2)
         run = p.runs[0]
-        run.font.name = 'Calibri'
+        run.font.name = FONT_NAME
         run.font.size = Pt(7.5)
         if r_idx == 0:
             run.font.bold = True
             run.font.color.rgb = RGBColor(255, 255, 255)
-            set_cell_shading(cell, "4338CA")
+            set_cell_shading(cell, BRAND_HEADER_HEX)
         elif r_idx == len(related_work) - 1:
             run.font.bold = True
-            run.font.color.rgb = RGBColor(16, 149, 193)
-            set_cell_shading(cell, "EFF6FF")
+            run.font.color.rgb = PRIMARY_BRAND
+            set_cell_shading(cell, BRAND_HIGHLIGHT_HEX)
         else:
             run.font.color.rgb = TEXT_DARK
-            set_cell_shading(cell, "F8FAFC" if r_idx % 2 == 1 else "FFFFFF")
+            set_cell_shading(cell, BRAND_ROW_ALT_HEX if r_idx % 2 == 1 else "FFFFFF")
 
 add_p("SHAGHOOF AI's primary contributions over existing tools are: (1) generating multiple content representations from Moodle course PDFs following UDL principles, (2) a RAG-based AI tutor that answers strictly from the student's own course documents with page-numbered citations and retrieval-confidence abstention, (3) native Egyptian Arabic dialect support in both text and speech, and (4) AI-generated descriptions of figures, diagrams, and equations in Arabic/English for screen-reader users.")
 
@@ -507,15 +541,15 @@ for r_idx, row in enumerate(tech_data):
         p.paragraph_format.space_before = Pt(3)
         p.paragraph_format.space_after = Pt(3)
         run = p.runs[0]
-        run.font.name = 'Calibri'
+        run.font.name = FONT_NAME
         run.font.size = Pt(8.5)
         if r_idx == 0:
             run.font.bold = True
             run.font.color.rgb = RGBColor(255, 255, 255)
-            set_cell_shading(cell, "4338CA")
+            set_cell_shading(cell, BRAND_HEADER_HEX)
         else:
             run.font.color.rgb = TEXT_DARK
-            set_cell_shading(cell, "F8FAFC" if r_idx % 2 == 1 else "FFFFFF")
+            set_cell_shading(cell, BRAND_ROW_ALT_HEX if r_idx % 2 == 1 else "FFFFFF")
 
 doc.add_page_break()
 
@@ -551,17 +585,17 @@ for r_idx, row in enumerate(core_endpoints):
         p.paragraph_format.space_before = Pt(2)
         p.paragraph_format.space_after = Pt(2)
         run = p.runs[0]
-        run.font.name = 'Calibri'
+        run.font.name = FONT_NAME
         run.font.size = Pt(8.5)
         if r_idx == 0:
             run.font.bold = True
             run.font.color.rgb = RGBColor(255, 255, 255)
-            set_cell_shading(cell, "4338CA")
+            set_cell_shading(cell, BRAND_HEADER_HEX)
         else:
             if c_idx == 0:
                 run.font.bold = True
-                run.font.color.rgb = RGBColor(16, 149, 193) if val == "GET" else RGBColor(16, 185, 129)
-            set_cell_shading(cell, "F8FAFC" if r_idx % 2 == 1 else "FFFFFF")
+                run.font.color.rgb = PRIMARY_BRAND if val == "GET" else RGBColor(16, 185, 129)
+            set_cell_shading(cell, BRAND_ROW_ALT_HEX if r_idx % 2 == 1 else "FFFFFF")
 
 add_p("", bold_prefix="8.2 Moodle Integration Endpoints", keep_with_next=True)
 moodle_endpoints = [
@@ -586,17 +620,17 @@ for r_idx, row in enumerate(moodle_endpoints):
         p.paragraph_format.space_before = Pt(2)
         p.paragraph_format.space_after = Pt(2)
         run = p.runs[0]
-        run.font.name = 'Calibri'
+        run.font.name = FONT_NAME
         run.font.size = Pt(8.5)
         if r_idx == 0:
             run.font.bold = True
             run.font.color.rgb = RGBColor(255, 255, 255)
-            set_cell_shading(cell, "4338CA")
+            set_cell_shading(cell, BRAND_HEADER_HEX)
         else:
             if c_idx == 0:
                 run.font.bold = True
-                run.font.color.rgb = RGBColor(16, 149, 193) if val == "GET" else RGBColor(16, 185, 129)
-            set_cell_shading(cell, "F8FAFC" if r_idx % 2 == 1 else "FFFFFF")
+                run.font.color.rgb = PRIMARY_BRAND if val == "GET" else RGBColor(16, 185, 129)
+            set_cell_shading(cell, BRAND_ROW_ALT_HEX if r_idx % 2 == 1 else "FFFFFF")
 
 # FIX #61: Made SECRET_KEY required
 add_p("", bold_prefix="8.3 Key Environment Variables", keep_with_next=True)
@@ -624,14 +658,14 @@ for r_idx, row in enumerate(env_data):
         p.paragraph_format.space_before = Pt(2)
         p.paragraph_format.space_after = Pt(2)
         run = p.runs[0]
-        run.font.name = 'Calibri'
+        run.font.name = FONT_NAME
         run.font.size = Pt(8.5)
         if r_idx == 0:
             run.font.bold = True
             run.font.color.rgb = RGBColor(255, 255, 255)
-            set_cell_shading(cell, "4338CA")
+            set_cell_shading(cell, BRAND_HEADER_HEX)
         else:
-            set_cell_shading(cell, "F8FAFC" if r_idx % 2 == 1 else "FFFFFF")
+            set_cell_shading(cell, BRAND_ROW_ALT_HEX if r_idx % 2 == 1 else "FFFFFF")
 
 # FIX #55, #62: Deployment section rewritten with pilot vs production
 add_p("", bold_prefix="8.4 Deployment", keep_with_next=True)
@@ -670,14 +704,14 @@ for r_idx, row in enumerate(qa_data):
         p.paragraph_format.space_before = Pt(2.5)
         p.paragraph_format.space_after = Pt(2.5)
         run = p.runs[0]
-        run.font.name = 'Calibri'
+        run.font.name = FONT_NAME
         run.font.size = Pt(8.5)
         if r_idx == 0:
             run.font.bold = True
             run.font.color.rgb = RGBColor(255, 255, 255)
-            set_cell_shading(cell, "4338CA")
+            set_cell_shading(cell, BRAND_HEADER_HEX)
         else:
-            set_cell_shading(cell, "F8FAFC" if r_idx % 2 == 1 else "FFFFFF")
+            set_cell_shading(cell, BRAND_ROW_ALT_HEX if r_idx % 2 == 1 else "FFFFFF")
 
 add_p("Total existing tests: 47. CI pipeline: GitHub Actions (planned). Coverage target: 70%+ for core backend modules.", italic=True)
 
@@ -781,16 +815,16 @@ for r_idx, row in enumerate(cost_sources):
         p.paragraph_format.space_before = Pt(2)
         p.paragraph_format.space_after = Pt(2)
         run = p.runs[0]
-        run.font.name = 'Calibri'
+        run.font.name = FONT_NAME
         run.font.size = Pt(7.5)
         if r_idx == 0:
             run.font.bold = True
             run.font.color.rgb = RGBColor(255, 255, 255)
-            set_cell_shading(cell, "4338CA")
+            set_cell_shading(cell, BRAND_HEADER_HEX)
         else:
             if c_idx == 0:
                 run.font.bold = True
-            set_cell_shading(cell, "F8FAFC" if r_idx % 2 == 1 else "FFFFFF")
+            set_cell_shading(cell, BRAND_ROW_ALT_HEX if r_idx % 2 == 1 else "FFFFFF")
 
 # FIX #70: Added usage assumptions
 add_p("", bold_prefix="12.2 Usage Assumptions (per student per month)", keep_with_next=True, space_after=2)
@@ -828,16 +862,16 @@ for r_idx, row in enumerate(unit_econ):
         p.paragraph_format.space_before = Pt(2)
         p.paragraph_format.space_after = Pt(2)
         run = p.runs[0]
-        run.font.name = 'Calibri'
+        run.font.name = FONT_NAME
         run.font.size = Pt(8)
         if r_idx == 0:
             run.font.bold = True
             run.font.color.rgb = RGBColor(255, 255, 255)
-            set_cell_shading(cell, "4338CA")
+            set_cell_shading(cell, BRAND_HEADER_HEX)
         else:
             if r_idx >= 5:
                 run.font.bold = True
-            set_cell_shading(cell, "F8FAFC" if r_idx % 2 == 1 else "FFFFFF")
+            set_cell_shading(cell, BRAND_ROW_ALT_HEX if r_idx % 2 == 1 else "FFFFFF")
 
 # FIX #71: Acknowledged excluded costs
 add_p("Note: These margins reflect COGS (API + hosting) only. A full P&L would also include payment gateway fees (~2.5%), VAT (14% in Egypt), customer support, marketing, and team salaries, which are beyond the scope of this technical proposal.", italic=True, space_after=3)
@@ -910,15 +944,15 @@ for r_idx, row in enumerate(timeline_data):
         p.paragraph_format.space_before = Pt(3)
         p.paragraph_format.space_after = Pt(3)
         run = p.runs[0]
-        run.font.name = 'Calibri'
+        run.font.name = FONT_NAME
         run.font.size = Pt(9)
         if r_idx == 0:
             run.font.bold = True
             run.font.color.rgb = RGBColor(255, 255, 255)
-            set_cell_shading(cell, "4338CA")
+            set_cell_shading(cell, BRAND_HEADER_HEX)
         else:
             run.font.color.rgb = TEXT_DARK
-            set_cell_shading(cell, "F8FAFC" if r_idx % 2 == 1 else "FFFFFF")
+            set_cell_shading(cell, BRAND_ROW_ALT_HEX if r_idx % 2 == 1 else "FFFFFF")
 
 doc.add_page_break()
 
@@ -950,16 +984,16 @@ for r_idx, row in enumerate(team_data):
         p.paragraph_format.space_before = Pt(2.5)
         p.paragraph_format.space_after = Pt(2.5)
         run = p.runs[0]
-        run.font.name = 'Calibri'
+        run.font.name = FONT_NAME
         run.font.size = Pt(9)
         if r_idx == 0:
             run.font.bold = True
             run.font.color.rgb = RGBColor(255, 255, 255)
-            set_cell_shading(cell, "4338CA")
+            set_cell_shading(cell, BRAND_HEADER_HEX)
         else:
             if c_idx == 0:
                 run.font.bold = True
-            set_cell_shading(cell, "F8FAFC" if r_idx % 2 == 1 else "FFFFFF")
+            set_cell_shading(cell, BRAND_ROW_ALT_HEX if r_idx % 2 == 1 else "FFFFFF")
 
 doc.add_page_break()
 
@@ -986,8 +1020,9 @@ for ref in references:
 # ── SAVE & EXPORT PDF ──────────────────────────────────────────────
 output_docx = r"C:\Users\Mayada AbouZeid\Downloads\SHAGHOOF_Project_Proposal_Updated.docx"
 output_pdf = r"C:\Users\Mayada AbouZeid\Downloads\SHAGHOOF_Project_Proposal_Updated.pdf"
+branded_pdf = r"C:\Users\Mayada AbouZeid\Downloads\SHAGHOOF_Project_Proposal_Shaghoof_Theme.pdf"
 doc.save(output_docx)
-print(f"Successfully generated clean docx: {output_docx}")
+print(f"Successfully generated clean docx: {output_docx}", flush=True)
 
 try:
     import win32com.client
@@ -995,10 +1030,21 @@ try:
     pythoncom.CoInitialize()
     word = win32com.client.Dispatch("Word.Application")
     word.Visible = False
-    doc_word = word.Documents.Open(output_docx)
-    doc_word.SaveAs(output_pdf, FileFormat=17)  # 17 = wdFormatPDF
-    doc_word.Close()
+    word.DisplayAlerts = 0  # wdAlertsNone
+    doc_word = word.Documents.Open(output_docx, ReadOnly=True)
+    
+    # Save the branded theme PDF
+    doc_word.SaveAs(branded_pdf, FileFormat=17)
+    print(f"Successfully generated clean branded pdf: {branded_pdf}", flush=True)
+    
+    # Try updating original if not locked
+    try:
+        doc_word.SaveAs(output_pdf, FileFormat=17)
+        print(f"Successfully updated original pdf: {output_pdf}", flush=True)
+    except Exception:
+        print(f"Original PDF is currently open in viewer; created branded version: {branded_pdf}", flush=True)
+        
+    doc_word.Close(False)
     word.Quit()
-    print(f"Successfully generated clean pdf: {output_pdf}")
 except Exception as e:
-    print(f"Word PDF conversion warning: {e}")
+    print(f"Word PDF conversion warning: {e}", flush=True)

@@ -406,6 +406,9 @@ doc.add_page_break()
 
 add_p("", bold_prefix="6.2 Moodle Course Sync & PDF Ingestion", keep_with_next=True)
 add_p("This flow shows how a student connects their Moodle account, activates a course, and how the platform discovers, downloads, chunks, embeds, and indexes every accessible text-based PDF in the background.")
+# FIX #40, #51: Explicit chunking methodology — fixed-size sliding window, NOT semantic chunking
+add_p("Chunking methodology: each PDF is split into fixed-size sliding-window chunks (500 tokens per chunk, 50-token overlap between consecutive chunks). This approach does not use semantic or structural chunking; it is a reproducible fixed-size strategy. Future work includes heading-based structural chunking for improved retrieval precision.", italic=True, space_after=3)
+
 
 if os.path.exists('extracted_diagrams/page_8_img_1.png'):
     doc.add_picture('extracted_diagrams/page_8_img_1.png', width=Inches(6.3))

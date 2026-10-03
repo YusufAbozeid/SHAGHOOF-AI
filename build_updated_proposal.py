@@ -153,7 +153,7 @@ r_sub.font.color.rgb = TEXT_DARK
 
 p_tagline = doc.add_paragraph()
 p_tagline.alignment = WD_ALIGN_PARAGRAPH.CENTER
-p_tagline.paragraph_format.space_after = Pt(80)
+p_tagline.paragraph_format.space_after = Pt(140)
 r_tag = p_tagline.add_run("Accessible, multimodal learning built from your own course materials")
 r_tag.font.name = FONT_NAME
 r_tag.font.size = Pt(11)
@@ -162,30 +162,11 @@ r_tag.font.color.rgb = MUTED_GRAY
 
 p_meta = doc.add_paragraph()
 p_meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
-p_meta.paragraph_format.space_after = Pt(6)
-r_meta1 = p_meta.add_run("Graduation Project Proposal\n")
+r_meta1 = p_meta.add_run("Graduation Project Proposal")
 r_meta1.font.name = FONT_NAME
 r_meta1.font.size = Pt(13)
 r_meta1.font.bold = True
 r_meta1.font.color.rgb = BRAND_ACCENT
-
-p_meta2 = doc.add_paragraph()
-p_meta2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-r_sup = p_meta2.add_run("Academic Supervisor: Dr. Mahmoud Sami\n")
-r_sup.font.name = FONT_NAME
-r_sup.font.size = Pt(11)
-r_sup.font.bold = True
-r_sup.font.color.rgb = TEXT_DARK
-
-r_team = p_meta2.add_run("Team Leader: Yusuf Adel Abbas (20235824)\n")
-r_team.font.name = FONT_NAME
-r_team.font.size = Pt(10)
-r_team.font.color.rgb = MUTED_GRAY
-
-r_year = p_meta2.add_run("Academic Year 2025 – 2026")
-r_year.font.name = FONT_NAME
-r_year.font.size = Pt(9.5)
-r_year.font.color.rgb = MUTED_GRAY
 
 doc.add_page_break()
 
@@ -1018,10 +999,14 @@ for ref in references:
     add_p(ref, space_after=3)
 
 # ── SAVE & EXPORT PDF ──────────────────────────────────────────────
-output_docx = r"C:\Users\Mayada AbouZeid\Downloads\SHAGHOOF_Project_Proposal_Updated.docx"
+output_docx = r"C:\Users\Mayada AbouZeid\Downloads\SHAGHOOF_Proposal_Theme.docx"
 output_pdf = r"C:\Users\Mayada AbouZeid\Downloads\SHAGHOOF_Project_Proposal_Updated.pdf"
-branded_pdf = r"C:\Users\Mayada AbouZeid\Downloads\SHAGHOOF_Project_Proposal_Shaghoof_Theme.pdf"
+branded_pdf = r"C:\Users\Mayada AbouZeid\Downloads\SHAGHOOF_Proposal_Theme.pdf"
 doc.save(output_docx)
+try:
+    doc.save(r"C:\Users\Mayada AbouZeid\Downloads\SHAGHOOF_Project_Proposal_Updated.docx")
+except Exception:
+    pass
 print(f"Successfully generated clean docx: {output_docx}", flush=True)
 
 try:
